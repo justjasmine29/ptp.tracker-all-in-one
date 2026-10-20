@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PTP Tracker — Dreamy Clouds</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,500&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;--bg:#fffaf6;--bg2:#f1e8fb;--card:rgba(255,251,247,.88);--ink:#3f2f4f;--mute:#66557a;--line:rgba(176,146,196,.45);--acc:#8250ad;--acc2:#f0e4fa;--blush:#f8d9e4;--gold:#8f6a1f;--star:transparent;--ok:#2f8f6b;--okbg:#dcf3ea;--bad:#c2486b;--badbg:#fbe0e8;--warn:#8f6a1b;--warnbg:#fbf0d6;--info:#5a62c4;--infobg:#e6e6fb;--onacc:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font-family:'Nunito',system-ui,sans-serif;color:var(--ink);line-height:1.5;min-height:100vh;background:#d9b9cf}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,#0f1b3d 0%,#2b2a63 36%,#6b4a86 60%,#d9808f 80%,#ffcf9a 100%)}
+.spark{font-size:1.9rem;color:#e9c46a;text-shadow:0 0 10px #fff9}
+header,.verse,.stat,.card,.remind,.empty{backdrop-filter:blur(6px)}
+header{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:10px 16px}
+.empty{background:var(--card);border-radius:18px}
+.wrap>section>p.meta{background:var(--card);padding:6px 12px;border-radius:12px;display:inline-block}
+.bd{background:var(--acc2);color:var(--acc);border-radius:999px;padding:0 7px;font-size:.75rem;margin-left:4px}.tab.on .bd{background:#fff3;color:var(--onacc)}
+.mbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:8px 12px;margin-bottom:12px;backdrop-filter:blur(6px)}
+.goal{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 16px;margin-bottom:14px;backdrop-filter:blur(6px)}
+.pbar{height:12px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:8px 0}.pbar i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.g-bad .pbar i{background:var(--bad)}.g-mid .pbar i{background:#d9a93f}.g-ok .pbar i{background:var(--ok)}
+.g-bad .gmsg{color:var(--bad);font-weight:700}.g-mid .gmsg{color:var(--warn);font-weight:700}.g-ok .gmsg{color:var(--ok);font-weight:700}
+.nums select{font-size:.85rem;padding:3px 8px;display:block;margin-top:2px}
+.rmk{display:flex;flex-direction:column;font-size:.8rem;color:var(--mute);gap:3px;margin-bottom:6px}.rmk input{width:100%}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.k1{background:#9b7fe0}.k2{background:#e0709a}.k3{background:#d9a93f}.k4{background:#9a9a9a}
+.lnk{word-break:break-all;color:var(--acc);font-size:.82rem}
+.wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:18px 14px 70px}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.brand{display:flex;align-items:center;gap:10px}
+.moon{width:44px;height:44px;filter:drop-shadow(0 0 8px var(--gold))}
+h1{font-family:'Cormorant Garamond',Georgia,serif;font-size:2.1rem;margin:0;line-height:1}
+h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:1.35rem;margin:0 0 8px}
+.sub,.meta{color:var(--mute);font-size:.85rem}
+.verse{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 16px;margin-bottom:14px;font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.15rem;display:flex;gap:10px;justify-content:space-between;align-items:center}
+.verse small{display:block;font-family:'Nunito',sans-serif;font-style:normal;font-size:.8rem;color:var(--gold);font-weight:700}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 13px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--acc)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.p,.tab.on{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.btn.d{color:var(--bad)}
+.btn.sm{padding:3px 10px;font-size:.8rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.stat b{display:block;font-size:1.35rem;font-family:'Cormorant Garamond',Georgia,serif}
+.stat small{color:var(--mute)}
+.remind{background:var(--warnbg);border:1px solid var(--line);border-radius:18px;padding:12px 16px;margin-bottom:14px}
+.remind h2{color:var(--warn);font-size:1.15rem}
+.remind div{margin:6px 0;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+input,select,textarea{font:inherit;color:var(--ink);background:#fffdfb;border:1px solid var(--line);border-radius:12px;padding:8px 10px;max-width:100%}
+.bar input{flex:1;min-width:150px}
+.list{display:grid;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.nm{font-weight:700;font-size:1.05rem}
+.tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.76rem;font-weight:700;margin:0 4px 3px 0}
+.Pending{background:var(--infobg);color:var(--info)}.Due{background:var(--warnbg);color:var(--warn)}.Overdue,.BP{background:var(--badbg);color:var(--bad)}.Paid,.Full{background:var(--okbg);color:var(--ok)}.Partial{background:var(--acc2);color:var(--acc)}
+.tag.t{background:var(--bg2);color:var(--mute)}
+.nums{display:flex;gap:18px;flex-wrap:wrap;margin:10px 0;font-size:.85rem;color:var(--mute)}
+.nums b{display:block;font-size:1.05rem;color:var(--ink)}
+.nums .g b{color:var(--gold)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ins{border-top:1px dashed var(--line);padding:7px 0;font-size:.9rem;display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.note{border-top:1px dashed var(--line);padding-top:5px;margin-top:5px;font-size:.86rem;display:flex;justify-content:space-between;gap:8px}
+dialog{border:1px solid var(--line);border-radius:20px;background:#fffaf6;color:var(--ink);padding:18px;width:min(520px,94vw);max-height:90vh}
+dialog::backdrop{background:rgba(10,5,35,.6)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg label{display:flex;flex-direction:column;font-size:.8rem;color:var(--mute);gap:3px}
+.fg .w{grid-column:1/-1}
+.fg textarea{min-height:120px}
+.pad{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.pad textarea{width:100%;min-height:130px;background:transparent;border:none;resize:vertical}
+.pad input{width:100%;background:transparent;border:none;font-weight:700}
+.empty{text-align:center;color:var(--mute);padding:28px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:7px 8px 7px 16px;border-radius:999px;z-index:50;display:none;font-weight:700}
+@media (max-width:520px){.fg{grid-template-columns:1fr}h1{font-size:1.7rem}}
+.bfl{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.bf{position:absolute;left:0;top:0;transform-origin:50% 50%;will-change:transform;filter:drop-shadow(0 5px 5px rgba(40,20,60,.3))}
+.bf svg{display:block;width:100%;overflow:visible}
+.bf .w{transform-origin:50px 40px;animation:fl .2s ease-in-out infinite alternate}
+.bf.p .w{animation:fl2 1.6s ease-in-out infinite alternate}
+@keyframes fl{from{transform:scaleX(1)}to{transform:scaleX(.12)}}
+@keyframes fl2{from{transform:scaleX(1)}to{transform:scaleX(.72)}}
+.bq{position:absolute;left:0;top:0;font:600 .72rem/1.25 'Nunito',system-ui,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:5px 8px;text-align:center;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(80,40,100,.15);transition:opacity .4s;opacity:0}
+@media (prefers-reduced-motion:reduce){.bf .w{animation:none!important}}
+
+:root{--acc:#23707e;--acc2:#dff3f2;--blush:#f6e3c8;--gold:#8a5f0f;--line:rgba(201,162,75,.65);--card:rgba(255,249,236,.93);--bg2:#e6f1ef;--ink:#2c2a4a;--mute:#56547a}
+.card,.stat,.goal,header,.verse,.mbar,.remind{box-shadow:0 6px 22px rgba(20,15,60,.28)}
+.btn.p,.tab.on{background:linear-gradient(135deg,#1f6472,#3b8fa0)}
+h1{background:linear-gradient(90deg,#7a5410,#c9962b,#7a5410);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stars{position:absolute;inset:0 0 40% 0;background-image:radial-gradient(1.6px 1.6px at 12% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 8%,#fff,transparent),radial-gradient(1.4px 1.4px at 47% 24%,#fff,transparent),radial-gradient(1px 1px at 63% 12%,#fff,transparent),radial-gradient(1.6px 1.6px at 78% 30%,#fff,transparent),radial-gradient(1px 1px at 91% 16%,#fff,transparent),radial-gradient(1.2px 1.2px at 5% 42%,#fff,transparent),radial-gradient(1px 1px at 55% 40%,#fff,transparent);animation:tw 4s ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.45}to{opacity:1}}
+.mn{position:absolute;right:11%;top:7%;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fffbe8,#ffe9a8 60%,#f7d27a);box-shadow:0 0 60px 22px rgba(255,235,170,.4)}
+.harbor{position:absolute;left:0;bottom:11vh;width:100%;height:24vh;fill:#1a1740}
+.sea{position:absolute;left:0;right:0;bottom:0;height:12vh;background:linear-gradient(180deg,#2d4a8a,#0f1b3d);overflow:hidden}
+.sea::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 34px,rgba(255,220,160,.2) 34px 38px);animation:wv 7s linear infinite}
+@keyframes wv{to{background-position:76px 0}}
+.ln{position:absolute;bottom:-8%;left:var(--x);width:var(--s);height:calc(var(--s)*1.25);border-radius:40% 40% 45% 45%;background:radial-gradient(circle at 50% 60%,#fff6c8,#ffb347 60%,#e0701a);box-shadow:0 0 18px 6px rgba(255,190,90,.55);animation:up var(--d) linear infinite}
+@keyframes up{to{transform:translate(var(--dx),-120vh)}}
+.fy{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff7b0;box-shadow:0 0 8px 3px rgba(255,240,150,.8);left:var(--x);top:var(--y);animation:fz var(--d) ease-in-out infinite alternate}
+@keyframes fz{to{transform:translate(var(--dx),var(--dy));opacity:.25}}
+.bf{filter:drop-shadow(0 0 10px rgba(255,240,180,.85)) drop-shadow(0 5px 5px rgba(20,10,50,.35))}
+.bq{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-weight:700;font-size:.92rem;line-height:1.15;border-color:#c9a24b;background:rgba(255,248,230,.96)}
+@media (prefers-reduced-motion:reduce){.ln,.fy,.stars,.sea::after{animation:none}}
+
+:root{--acc:#5a4fb5;--acc2:#ebe8ff;--blush:#ece6ff;--gold:#6b5aa8;--line:rgba(180,165,235,.65);--card:rgba(247,245,255,.93);--bg2:#e8e6fa;--ink:#25234a;--mute:#55537c}
+.sky{background:linear-gradient(180deg,#050819 0%,#10163f 35%,#232a6a 62%,#4a4c9c 85%,#8c8ad0 100%)}
+.btn.p,.tab.on{background:linear-gradient(135deg,#4b3f9a,#7a6bd0)}
+h1{background:linear-gradient(90deg,#4b3f9a,#9a88ee,#4b3f9a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mn{right:9%;top:6%;width:clamp(110px,14vw,190px);height:clamp(110px,14vw,190px);background:radial-gradient(circle at 30% 30%,#fffef2,#f4efd2 55%,#d9d2ae);box-shadow:0 0 80px 30px rgba(255,248,210,.45),0 0 200px 80px rgba(190,200,255,.25);animation:pl 6s ease-in-out infinite alternate}
+.mn::after{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 62% 28%,rgba(150,145,130,.35) 0 9%,transparent 10%),radial-gradient(circle at 35% 60%,rgba(150,145,130,.3) 0 12%,transparent 13%),radial-gradient(circle at 70% 68%,rgba(150,145,130,.28) 0 7%,transparent 8%),radial-gradient(circle at 28% 25%,rgba(150,145,130,.22) 0 6%,transparent 7%)}
+@keyframes pl{to{box-shadow:0 0 110px 44px rgba(255,248,210,.55),0 0 240px 100px rgba(190,200,255,.3)}}
+.harbor{fill:#0b0f2e}
+.sea{background:linear-gradient(180deg,#1d2a66,#0a1030)}
+.sea::before{content:'';position:absolute;right:9%;top:0;bottom:0;width:clamp(110px,14vw,190px);background:linear-gradient(180deg,rgba(255,248,210,.55),transparent);filter:blur(6px)}
+.sea::after{background:repeating-linear-gradient(90deg,transparent 0 34px,rgba(220,225,255,.2) 34px 38px)}
+.ss{position:absolute;top:10%;left:-10%;width:120px;height:2px;background:linear-gradient(90deg,transparent,#fff);animation:sh 11s linear infinite}
+@keyframes sh{0%{transform:translate(0,0) rotate(25deg);opacity:0}4%{opacity:1}16%{transform:translate(70vw,32vw) rotate(25deg);opacity:0}100%{opacity:0}}
+.bq{border-color:#b6a9ee;background:rgba(248,246,255,.96)}
+@media (prefers-reduced-motion:reduce){.ss,.mn{animation:none}}
+
+:root{--acc:#a23f93;--acc2:#fde6f5;--blush:#ffe0f0;--gold:#9a5b12;--line:rgba(240,150,210,.7);--card:rgba(255,246,252,.9);--bg2:#fbe6f4;--ink:#2b1f4f;--mute:#6a4f84}
+.sky{background:linear-gradient(180deg,#0a0830 0%,#2a1566 30%,#6a2a9a 55%,#c2509f 76%,#ff9a7a 90%,#ffd08a 100%)}
+.harbor,.sea{display:none}
+.au{position:absolute;left:-20%;right:-20%;top:4%;height:52%;background:linear-gradient(100deg,transparent 8%,rgba(255,90,200,.4) 28%,rgba(120,90,255,.45) 44%,rgba(80,220,255,.32) 60%,rgba(255,200,120,.35) 76%,transparent 92%);filter:blur(38px);transform:rotate(-8deg);animation:au 14s ease-in-out infinite alternate}
+@keyframes au{to{transform:rotate(-2deg) translateX(6%);opacity:.65}}
+.mw{position:absolute;right:-12%;top:22%;width:72%;height:28%;background:radial-gradient(ellipse,rgba(255,225,205,.4),rgba(170,140,255,.2) 50%,transparent 72%);transform:rotate(28deg);filter:blur(16px)}
+.mn{z-index:3;background:radial-gradient(circle at 35% 32%,#fff,#ffd9ef 50%,#f4a8d4);box-shadow:0 0 70px 28px rgba(255,170,225,.55),0 0 190px 80px rgba(255,150,220,.3);animation:pl2 6s ease-in-out infinite alternate}
+@keyframes pl2{to{box-shadow:0 0 100px 42px rgba(255,190,235,.7),0 0 240px 100px rgba(255,150,220,.4)}}
+.mn::after{background:radial-gradient(circle at 62% 28%,rgba(230,110,170,.35) 0 9%,transparent 10%),radial-gradient(circle at 35% 60%,rgba(230,110,170,.3) 0 12%,transparent 13%),radial-gradient(circle at 70% 68%,rgba(230,110,170,.28) 0 7%,transparent 8%),radial-gradient(circle at 28% 25%,rgba(230,110,170,.22) 0 6%,transparent 7%)}
+.mn svg{position:absolute;left:-30%;top:55%;width:150%;height:260%;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 5px #ffb0e4);z-index:1}
+.mn svg path{stroke-dasharray:5 9;animation:fw 5s linear infinite}
+@keyframes fw{to{stroke-dashoffset:-56}}
+.cf{position:absolute;left:2%;top:14%;width:clamp(120px,13vw,200px);z-index:2;filter:drop-shadow(0 0 12px rgba(255,205,245,.95))}
+.fa{animation:fd 5s ease-in-out infinite alternate;transform-origin:170px 110px}
+@keyframes fd{to{transform:translate(4px,-8px) rotate(5deg)}}
+.scene{position:absolute;left:0;bottom:0;width:100%;height:34vh;z-index:1}
+.scene .rv{filter:drop-shadow(0 0 10px #ffc6f0)}
+.ck rect[fill="#ffd27a"]{filter:drop-shadow(0 0 5px #ffd27a)}
+#fls{filter:drop-shadow(0 0 4px rgba(255,190,240,.9))}
+.pt{position:absolute;top:-5%;left:var(--x);width:var(--s);height:var(--s);background:radial-gradient(circle at 30% 30%,#fff,#ffb6dd);border-radius:0 100% 0 100%;box-shadow:0 0 8px 2px rgba(255,170,220,.7);animation:fall var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(540deg)}}
+.card,.stat,.goal,header,.verse,.mbar,.remind{box-shadow:0 0 0 1px rgba(255,190,235,.5),0 0 22px rgba(255,150,225,.45),0 8px 26px rgba(20,10,60,.3)}
+.card:hover{box-shadow:0 0 0 1px rgba(255,170,230,.8),0 0 32px rgba(255,130,220,.7),0 8px 26px rgba(20,10,60,.3)}
+.btn:hover{box-shadow:0 0 14px rgba(255,150,225,.85)}
+.btn.p,.tab.on{background:linear-gradient(135deg,#8f3a9e,#c24fa8);box-shadow:0 0 12px rgba(255,120,215,.6)}
+h1{background:linear-gradient(90deg,#8f3a9e,#e86bb8,#c9902b,#8f3a9e);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px rgba(255,150,220,.65))}
+.pbar i{box-shadow:0 0 10px rgba(255,130,220,.95)}
+.tag{box-shadow:0 0 6px rgba(255,170,230,.45)}
+.bq{border-color:#f0a0d6;background:rgba(255,245,252,.96);box-shadow:0 0 14px rgba(255,160,225,.75)}
+.bf{filter:drop-shadow(0 0 12px rgba(255,235,250,.95)) drop-shadow(0 0 4px rgba(255,170,230,.8))}
+@media (prefers-reduced-motion:reduce){.au,.mn,.fa,.pt,.mn svg path{animation:none}}
+
+.gf{position:absolute;right:1.5%;top:30%;width:clamp(130px,14vw,220px);z-index:4;filter:drop-shadow(0 0 12px rgba(150,255,190,.9)) drop-shadow(0 0 4px rgba(255,230,140,.8));animation:gfd 6s ease-in-out infinite alternate}
+@keyframes gfd{to{transform:translate(-6px,-12px) rotate(-2deg)}}
+.gwg{transform-origin:120px 120px;animation:gwf 1.3s ease-in-out infinite alternate}
+@keyframes gwf{to{transform:scaleX(.9)}}
+.mn{right:14%;width:clamp(130px,16vw,230px);height:clamp(130px,16vw,230px);background:#ffb6d9;box-shadow:0 0 30px 8px rgba(255,228,200,.8),0 0 100px 42px rgba(255,150,215,.6),0 0 240px 105px rgba(255,130,210,.34);animation:pl3 7s ease-in-out infinite alternate}
+@keyframes pl3{to{box-shadow:0 0 46px 14px rgba(255,236,210,.92),0 0 135px 56px rgba(255,160,222,.72),0 0 290px 130px rgba(255,130,210,.42)}}
+.mn::after{display:none}
+.mn svg.mf{position:absolute;left:0;top:0;width:100%;height:100%;filter:none;z-index:0;overflow:visible;border-radius:50%}
+.mn svg.mf path{animation:none}
+@media (prefers-reduced-motion:reduce){.gf,.gwg{animation:none}}
+
+.sky{background:linear-gradient(180deg,#8f86b8 0%,#b48fb8 24%,#e39ab5 48%,#f4a98f 72%,#ffcf85 100%)}
+.cl{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 0 14px rgba(255,210,150,.65));animation:cd 45s ease-in-out infinite alternate}
+@keyframes cd{to{transform:translateX(-2.5%)}}
+.gc{position:absolute;left:3%;top:56%;width:clamp(90px,10vw,160px);z-index:2;filter:drop-shadow(0 0 10px #ffe27a) drop-shadow(0 0 28px rgba(255,200,90,.85));animation:gcp 5s ease-in-out infinite alternate}
+@keyframes gcp{to{filter:drop-shadow(0 0 16px #fff0a0) drop-shadow(0 0 40px rgba(255,200,90,1))}}
+.gs{position:absolute;left:var(--x);top:var(--y);width:var(--s);height:var(--s);fill:#fff1b8;filter:drop-shadow(0 0 5px #ffe27a) drop-shadow(0 0 12px rgba(255,210,120,.9));animation:gt var(--d) ease-in-out infinite alternate;animation-delay:var(--dl)}
+@keyframes gt{from{opacity:.35;transform:scale(.7) rotate(0)}to{opacity:1;transform:scale(1.15) rotate(20deg)}}
+:root{--line:rgba(255,196,140,.75)}
+.card,.stat,.goal,header,.verse,.mbar,.remind{box-shadow:0 0 0 1px rgba(255,205,150,.6),0 0 24px rgba(255,170,150,.5),0 8px 26px rgba(70,30,80,.28)}
+.btn.p,.tab.on{background:linear-gradient(135deg,#8f4aa6,#c95a86);box-shadow:0 0 12px rgba(255,160,150,.65)}
+h1{background:linear-gradient(90deg,#8f4aa6,#e0728f,#d4962a,#8f4aa6);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px rgba(255,190,140,.7))}
+@media (prefers-reduced-motion:reduce){.cl,.gc,.gs{animation:none}}
+</style>
+</head>
+<body>
+<div class="fx" aria-hidden="true"><div class="sky"></div><svg class="cl" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="c1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b8a0d8"/><stop offset=".55" stop-color="#a98bc9"/><stop offset="1" stop-color="#8d78b8"/></linearGradient><linearGradient id="c2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd49a"/><stop offset=".55" stop-color="#f6a98f"/><stop offset="1" stop-color="#e98ab0"/></linearGradient><linearGradient id="c3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e891b6"/><stop offset=".55" stop-color="#c47fb4"/><stop offset="1" stop-color="#8f72b8"/></linearGradient><linearGradient id="c4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9b6e4"/><stop offset=".55" stop-color="#b7a1d6"/><stop offset="1" stop-color="#9a88c4"/></linearGradient></defs><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="-118" cy="150" r="112"/><circle cx="-46" cy="126" r="76"/><circle cx="27" cy="100" r="98"/><circle cx="79" cy="83" r="60"/><circle cx="152" cy="85" r="65"/><circle cx="209" cy="78" r="77"/><circle cx="292" cy="106" r="115"/><circle cx="348" cy="119" r="63"/><circle cx="410" cy="155" r="69"/><circle cx="150" cy="170" r="105"/></g><g fill="url(#c1)" stroke="none"><circle cx="-118" cy="150" r="112"/><circle cx="-46" cy="126" r="76"/><circle cx="27" cy="100" r="98"/><circle cx="79" cy="83" r="60"/><circle cx="152" cy="85" r="65"/><circle cx="209" cy="78" r="77"/><circle cx="292" cy="106" r="115"/><circle cx="348" cy="119" r="63"/><circle cx="410" cy="155" r="69"/><circle cx="150" cy="170" r="105"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="717" cy="108" r="62"/><circle cx="777" cy="76" r="112"/><circle cx="853" cy="57" r="74"/><circle cx="910" cy="51" r="54"/><circle cx="976" cy="41" r="103"/><circle cx="1060" cy="61" r="110"/><circle cx="1121" cy="81" r="90"/><circle cx="1171" cy="108" r="83"/><circle cx="950" cy="122" r="91"/></g><g fill="url(#c4)" stroke="none"><circle cx="717" cy="108" r="62"/><circle cx="777" cy="76" r="112"/><circle cx="853" cy="57" r="74"/><circle cx="910" cy="51" r="54"/><circle cx="976" cy="41" r="103"/><circle cx="1060" cy="61" r="110"/><circle cx="1121" cy="81" r="90"/><circle cx="1171" cy="108" r="83"/><circle cx="950" cy="122" r="91"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="833" cy="366" r="103"/><circle cx="908" cy="332" r="70"/><circle cx="977" cy="311" r="108"/><circle cx="1039" cy="309" r="54"/><circle cx="1132" cy="313" r="78"/><circle cx="1191" cy="329" r="93"/><circle cx="1263" cy="362" r="81"/><circle cx="1050" cy="378" r="84"/></g><g fill="url(#c1)" stroke="none"><circle cx="833" cy="366" r="103"/><circle cx="908" cy="332" r="70"/><circle cx="977" cy="311" r="108"/><circle cx="1039" cy="309" r="54"/><circle cx="1132" cy="313" r="78"/><circle cx="1191" cy="329" r="93"/><circle cx="1263" cy="362" r="81"/><circle cx="1050" cy="378" r="84"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="-218" cy="385" r="112"/><circle cx="-129" cy="354" r="132"/><circle cx="-72" cy="314" r="104"/><circle cx="11" cy="296" r="181"/><circle cx="79" cy="292" r="170"/><circle cx="157" cy="293" r="139"/><circle cx="228" cy="304" r="160"/><circle cx="288" cy="317" r="135"/><circle cx="368" cy="345" r="111"/><circle cx="437" cy="387" r="181"/><circle cx="110" cy="422" r="161"/></g><g fill="url(#c2)" stroke="none"><circle cx="-218" cy="385" r="112"/><circle cx="-129" cy="354" r="132"/><circle cx="-72" cy="314" r="104"/><circle cx="11" cy="296" r="181"/><circle cx="79" cy="292" r="170"/><circle cx="157" cy="293" r="139"/><circle cx="228" cy="304" r="160"/><circle cx="288" cy="317" r="135"/><circle cx="368" cy="345" r="111"/><circle cx="437" cy="387" r="181"/><circle cx="110" cy="422" r="161"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="-212" cy="596" r="102"/><circle cx="-156" cy="558" r="146"/><circle cx="-93" cy="537" r="137"/><circle cx="-2" cy="506" r="186"/><circle cx="50" cy="494" r="211"/><circle cx="130" cy="489" r="99"/><circle cx="201" cy="513" r="191"/><circle cx="265" cy="532" r="147"/><circle cx="339" cy="564" r="133"/><circle cx="395" cy="592" r="188"/><circle cx="90" cy="636" r="168"/></g><g fill="url(#c3)" stroke="none"><circle cx="-212" cy="596" r="102"/><circle cx="-156" cy="558" r="146"/><circle cx="-93" cy="537" r="137"/><circle cx="-2" cy="506" r="186"/><circle cx="50" cy="494" r="211"/><circle cx="130" cy="489" r="99"/><circle cx="201" cy="513" r="191"/><circle cx="265" cy="532" r="147"/><circle cx="339" cy="564" r="133"/><circle cx="395" cy="592" r="188"/><circle cx="90" cy="636" r="168"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="724" cy="565" r="184"/><circle cx="787" cy="542" r="152"/><circle cx="852" cy="504" r="111"/><circle cx="926" cy="479" r="179"/><circle cx="970" cy="470" r="94"/><circle cx="1044" cy="491" r="99"/><circle cx="1114" cy="506" r="97"/><circle cx="1171" cy="532" r="136"/><circle cx="1232" cy="571" r="103"/><circle cx="980" cy="604" r="147"/></g><g fill="url(#c2)" stroke="none"><circle cx="724" cy="565" r="184"/><circle cx="787" cy="542" r="152"/><circle cx="852" cy="504" r="111"/><circle cx="926" cy="479" r="179"/><circle cx="970" cy="470" r="94"/><circle cx="1044" cy="491" r="99"/><circle cx="1114" cy="506" r="97"/><circle cx="1171" cy="532" r="136"/><circle cx="1232" cy="571" r="103"/><circle cx="980" cy="604" r="147"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="-145" cy="733" r="135"/><circle cx="-70" cy="721" r="167"/><circle cx="7" cy="694" r="81"/><circle cx="65" cy="671" r="156"/><circle cx="155" cy="665" r="105"/><circle cx="221" cy="651" r="84"/><circle cx="295" cy="647" r="170"/><circle cx="375" cy="660" r="135"/><circle cx="440" cy="662" r="140"/><circle cx="531" cy="673" r="177"/><circle cx="605" cy="696" r="133"/><circle cx="665" cy="724" r="161"/><circle cx="747" cy="748" r="112"/><circle cx="300" cy="770" r="140"/></g><g fill="url(#c3)" stroke="none"><circle cx="-145" cy="733" r="135"/><circle cx="-70" cy="721" r="167"/><circle cx="7" cy="694" r="81"/><circle cx="65" cy="671" r="156"/><circle cx="155" cy="665" r="105"/><circle cx="221" cy="651" r="84"/><circle cx="295" cy="647" r="170"/><circle cx="375" cy="660" r="135"/><circle cx="440" cy="662" r="140"/><circle cx="531" cy="673" r="177"/><circle cx="605" cy="696" r="133"/><circle cx="665" cy="724" r="161"/><circle cx="747" cy="748" r="112"/><circle cx="300" cy="770" r="140"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="391" cy="761" r="83"/><circle cx="480" cy="743" r="148"/><circle cx="548" cy="724" r="78"/><circle cx="617" cy="701" r="125"/><circle cx="689" cy="683" r="97"/><circle cx="762" cy="686" r="99"/><circle cx="844" cy="682" r="145"/><circle cx="903" cy="690" r="113"/><circle cx="985" cy="696" r="167"/><circle cx="1054" cy="725" r="123"/><circle cx="1137" cy="745" r="150"/><circle cx="1206" cy="773" r="139"/><circle cx="800" cy="796" r="133"/></g><g fill="url(#c2)" stroke="none"><circle cx="391" cy="761" r="83"/><circle cx="480" cy="743" r="148"/><circle cx="548" cy="724" r="78"/><circle cx="617" cy="701" r="125"/><circle cx="689" cy="683" r="97"/><circle cx="762" cy="686" r="99"/><circle cx="844" cy="682" r="145"/><circle cx="903" cy="690" r="113"/><circle cx="985" cy="696" r="167"/><circle cx="1054" cy="725" r="123"/><circle cx="1137" cy="745" r="150"/><circle cx="1206" cy="773" r="139"/><circle cx="800" cy="796" r="133"/></g><g fill="none" stroke="#ffd98a" stroke-width="3" stroke-opacity=".85"><circle cx="-195" cy="816" r="119"/><circle cx="-112" cy="797" r="95"/><circle cx="-37" cy="782" r="141"/><circle cx="21" cy="755" r="89"/><circle cx="109" cy="750" r="76"/><circle cx="179" cy="756" r="88"/><circle cx="272" cy="751" r="101"/><circle cx="355" cy="769" r="120"/><circle cx="418" cy="798" r="115"/><circle cx="494" cy="817" r="140"/><circle cx="150" cy="844" r="112"/></g><g fill="url(#c4)" stroke="none"><circle cx="-195" cy="816" r="119"/><circle cx="-112" cy="797" r="95"/><circle cx="-37" cy="782" r="141"/><circle cx="21" cy="755" r="89"/><circle cx="109" cy="750" r="76"/><circle cx="179" cy="756" r="88"/><circle cx="272" cy="751" r="101"/><circle cx="355" cy="769" r="120"/><circle cx="418" cy="798" r="115"/><circle cx="494" cy="817" r="140"/><circle cx="150" cy="844" r="112"/></g></svg><svg class="gc" viewBox="0 0 120 140"><defs><linearGradient id="gcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".5" stop-color="#ffe27a"/><stop offset="1" stop-color="#f5b942"/></linearGradient></defs><path d="M96 8C52 14 18 48 18 86C18 116 42 134 72 130C40 124 28 98 38 66C46 40 68 18 96 8Z" fill="url(#gcg)"/><circle cx="40" cy="96" r="1.2" fill="#fff"/><circle cx="32" cy="80" r="1" fill="#fff"/><circle cx="58" cy="118" r="1.1" fill="#fff"/><circle cx="48" cy="50" r="1" fill="#fff"/></svg><div class="stars"></div><div class="au"></div><div class="mw"></div><div class="mn"><svg class="mf" viewBox="0 0 200 200"><defs><clipPath id="mc"><circle cx="100" cy="100" r="100"/></clipPath>
+<radialGradient id="mb" cx=".38" cy=".36" r=".78"><stop offset="0" stop-color="#fff5fb"/><stop offset=".55" stop-color="#ffc2e2"/><stop offset="1" stop-color="#e27cb4"/></radialGradient>
+<radialGradient id="ml" cx=".5" cy=".5" r=".5"><stop offset=".72" stop-color="#8a2f66" stop-opacity="0"/><stop offset="1" stop-color="#8a2f66" stop-opacity=".5"/></radialGradient>
+<filter id="gr" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="4"/><feColorMatrix values="0 0 0 0 .6 0 0 0 0 .2 0 0 0 0 .42 1.5 0 0 0 -.45"/></filter>
+<filter id="mr" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="3" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="16"/><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+<g clip-path="url(#mc)"><circle cx="100" cy="100" r="100" fill="url(#mb)"/><g fill="#c9558f" opacity=".5" filter="url(#mr)"><ellipse cx="78" cy="62" rx="26" ry="22" transform="rotate(0 78 62)"/><ellipse cx="112" cy="62" rx="15" ry="14" transform="rotate(0 112 62)"/><ellipse cx="130" cy="92" rx="22" ry="15" transform="rotate(-20 130 92)"/><ellipse cx="160" cy="72" rx="10" ry="8" transform="rotate(0 160 72)"/><ellipse cx="150" cy="120" rx="12" ry="17" transform="rotate(20 150 120)"/><ellipse cx="44" cy="100" rx="22" ry="40" transform="rotate(-8 44 100)"/><ellipse cx="92" cy="138" rx="16" ry="11" transform="rotate(0 92 138)"/><ellipse cx="56" cy="140" rx="9" ry="9" transform="rotate(0 56 140)"/><ellipse cx="100" cy="88" rx="9" ry="7" transform="rotate(0 100 88)"/><ellipse cx="66" cy="48" rx="12" ry="9" transform="rotate(0 66 48)"/></g><circle cx="34.3" cy="120.4" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="18.8" cy="125.5" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="126.3" cy="160.3" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="107.5" cy="72.8" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="142.5" cy="152.5" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="52.1" cy="67.4" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="58.9" cy="40.7" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="39.9" cy="41.5" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="137.4" cy="114.7" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="34.1" cy="52.6" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="21.4" cy="130.9" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="105.2" cy="149.6" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="67.4" cy="47.0" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="43.1" cy="137.8" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="86.4" cy="50.2" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="84.2" cy="98.7" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="105.8" cy="42.1" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="32.0" cy="159.0" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="120.2" cy="186.2" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="10.5" cy="117.2" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="39.4" cy="133.5" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="108.4" cy="53.0" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="95.8" cy="110.5" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="101.5" cy="68.4" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="97.4" cy="90.7" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="111.2" cy="62.9" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="124.8" cy="160.8" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="50.2" cy="127.8" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="62.7" cy="120.3" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="159.6" cy="31.4" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="71.2" cy="181.6" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="135.3" cy="184.8" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="81.6" cy="77.4" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="110.7" cy="145.5" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="76.2" cy="144.1" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="137.5" cy="118.9" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="155.6" cy="105.4" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="13.8" cy="126.2" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="116.7" cy="70.5" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="114.8" cy="132.9" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="118.9" cy="58.1" r="1.6" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="139.7" cy="161.2" r="4.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="129.6" cy="184.7" r="3" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="52.4" cy="63.9" r="1.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="151.0" cy="141.7" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/><circle cx="105.7" cy="177.0" r="2.2" fill="rgba(190,80,140,.2)" stroke="rgba(255,240,250,.55)" stroke-width=".6"/>
+<g stroke="#fff0fa" stroke-width="1.1" opacity=".3" filter="url(#mr)"><line x1="96" y1="168" x2="156.3" y2="115.4"/><line x1="96" y1="168" x2="174.1" y2="150.8"/><line x1="96" y1="168" x2="172.8" y2="190.4"/><line x1="96" y1="168" x2="152.7" y2="224.4"/><line x1="96" y1="168" x2="118.7" y2="244.7"/><line x1="96" y1="168" x2="79.1" y2="246.2"/><line x1="96" y1="168" x2="43.7" y2="228.5"/><line x1="96" y1="168" x2="21.1" y2="196.1"/><line x1="96" y1="168" x2="16.8" y2="156.7"/><line x1="96" y1="168" x2="31.9" y2="120.1"/><line x1="96" y1="168" x2="62.7" y2="95.3"/><line x1="96" y1="168" x2="101.7" y2="88.2"/><line x1="96" y1="168" x2="42.7" y2="227.7"/><line x1="96" y1="168" x2="20.6" y2="194.8"/><line x1="96" y1="168" x2="18.7" y2="147.6"/><line x1="96" y1="168" x2="162.0" y2="213.2"/><line x1="96" y1="168" x2="175.6" y2="176.0"/></g><circle cx="96" cy="168" r="3.4" fill="#fff"/><circle cx="72" cy="92" r="2.6" fill="#fff" opacity=".9"/><circle cx="52" cy="84" r="2" fill="#fff" opacity=".8"/>
+<rect width="200" height="200" filter="url(#gr)" opacity=".5"/><circle cx="100" cy="100" r="100" fill="url(#ml)"/></g></svg><svg viewBox="0 0 160 300" preserveAspectRatio="none"><defs><linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#ffc2ea"/><stop offset="1" stop-color="#ffc2ea" stop-opacity="0"/></linearGradient></defs><path d="M80 0C30 50 130 90 70 150S20 230 10 300" stroke="url(#rg)" stroke-width="1.6" fill="none"/><path d="M84 0C50 60 150 100 90 160S50 240 40 300" stroke="url(#rg)" stroke-width="1.1" fill="none"/><path d="M76 0C20 40 110 100 50 170S0 250 -10 300" stroke="url(#rg)" stroke-width="1.3" fill="none"/><path d="M88 0C70 70 160 110 110 180S80 250 70 300" stroke="url(#rg)" stroke-width="0.9" fill="none"/></svg></div><svg class="harbor" viewBox="0 0 1200 200" preserveAspectRatio="xMidYMax slice"><path d="M0 200V130C120 80 260 150 420 110S760 60 920 118 1110 92 1200 125V200Z"/><path d="M0 170l14 -49l14 43zM55 170l14 -52l14 55zM110 170l14 -44l14 42zM165 170l14 -42l14 40zM220 170l14 -52l14 57zM275 170l14 -49l14 41zM330 170l14 -47l14 56zM385 170l14 -57l14 51zM440 170l14 -48l14 45zM495 170l14 -43l14 48zM550 170l14 -46l14 40zM605 170l14 -60l14 48zM660 170l14 -48l14 46zM715 170l14 -45l14 49zM770 170l14 -49l14 60zM825 170l14 -51l14 42zM880 170l14 -59l14 50zM935 170l14 -61l14 52zM990 170l14 -56l14 47zM1045 170l14 -45l14 47zM1100 170l14 -55l14 48zM1155 170l14 -42l14 57z"/></svg><i class="ss"></i><svg class="gf" viewBox="0 0 240 300"><defs><linearGradient id="gw" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b6f5d8"/><stop offset=".5" stop-color="#5fd0a0"/><stop offset="1" stop-color="#2c9a78"/></linearGradient><linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63cf7e"/><stop offset="1" stop-color="#2a8a4c"/></linearGradient>
+<g id="gww"><path d="M114 120C70 100 18 60 20 22C60 18 108 56 114 112Z" fill="url(#gw)" opacity=".85" stroke="#d4af5a" stroke-width="1.2"/><path d="M112 140C78 144 38 168 52 198C86 200 110 172 114 146Z" fill="url(#gw)" opacity=".8" stroke="#d4af5a" stroke-width="1.2"/><path d="M112 116C80 90 50 60 30 30M108 100C80 98 56 90 38 60M110 146C86 160 66 178 56 196" stroke="#d4af5a" stroke-width=".8" fill="none" opacity=".8"/></g>
+<g id="cl"><circle cx="-3.4" cy="-3.4" r="3.8"/><circle cx="3.4" cy="-3.4" r="3.8"/><circle cx="-3.4" cy="3.4" r="3.8"/><circle cx="3.4" cy="3.4" r="3.8"/></g></defs>
+<g class="gwg"><use href="#gww"/><use href="#gww" transform="translate(240 0) scale(-1 1)"/></g>
+<path d="M92 72C62 100 66 150 90 176C82 138 92 106 102 84ZM148 72C178 100 174 150 150 176C158 138 148 106 138 84Z" fill="#ecd59c"/><circle cx="120" cy="40" r="20" fill="#e6cd90"/>
+<path d="M98 124h44l6 26h-56Z" fill="url(#gd)"/><path d="M106 116q14 14 28 0" stroke="#7be08c" stroke-width="2" stroke-dasharray="1.5 3" fill="none"/>
+<path d="M94 150C70 162 62 186 60 198H180C178 186 170 162 146 150Z" fill="url(#gd)"/><path d="M58 198q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0q6 9 12 0Z" fill="#fffdf6"/>
+<rect x="107" y="204" width="9" height="42" rx="4" fill="#ffe3d3"/><rect x="124" y="204" width="9" height="42" rx="4" fill="#ffe3d3"/><ellipse cx="111" cy="250" rx="8" ry="4" fill="#ffd2bd"/><ellipse cx="129" cy="250" rx="8" ry="4" fill="#ffd2bd"/><circle cx="111" cy="232" r="3" fill="#5fcf6d"/><circle cx="129" cy="232" r="3" fill="#5fcf6d"/>
+<path d="M99 126C90 142 100 162 118 170M141 126C150 142 140 162 122 170" stroke="#ffe3d3" stroke-width="8" fill="none" stroke-linecap="round"/><circle cx="120" cy="170" r="8" fill="#ffe3d3"/>
+<path d="M90 90L56 78L88 104ZM150 90L184 78L152 104Z" fill="#ffc7ad"/><circle cx="120" cy="88" r="34" fill="#ffe3d3"/>
+<path d="M86 84C88 52 152 52 154 84C140 68 100 68 86 84Z" fill="#f0dba6"/>
+<g id="ey"><ellipse cx="106" cy="94" rx="7" ry="9" fill="#fff"/><circle cx="106" cy="95" r="6" fill="#35b868"/><circle cx="106" cy="95" r="3" fill="#12351f"/><circle cx="104" cy="92" r="1.8" fill="#fff"/></g><use href="#ey" transform="translate(28 0)"/>
+<circle cx="97" cy="106" r="5" fill="#ff9ab4" opacity=".5"/><circle cx="143" cy="106" r="5" fill="#ff9ab4" opacity=".5"/><path d="M114 110q6 5 12 0" stroke="#c55a62" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M99 104h.1M104 106h.1M136 106h.1M141 104h.1" stroke="#d98a6a" stroke-width="1.4" stroke-linecap="round"/>
+<g fill="#7acb4a"><use href="#cl" x="108" y="48"/><use href="#cl" x="138" y="50"/><use href="#cl" x="154" y="62" transform="scale(.8)"/></g><g fill="#3fc4a8"><use href="#cl" x="124" y="44" transform="scale(.7)"/></g>
+<circle cx="94" cy="58" r="12" fill="#ff9ec4"/><circle cx="94" cy="58" r="7" fill="#ff7fb0"/><circle cx="94" cy="58" r="3" fill="#ffc2dc"/><circle cx="124" cy="46" r="4" fill="#ff9ec4"/><circle cx="150" cy="56" r="4" fill="#ffd1e8"/>
+<g transform="translate(40 232) scale(0.9)"><ellipse rx="3" ry="8" cy="-9" transform="rotate(0)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(36)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(72)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(108)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(144)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(180)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(216)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(252)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(288)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(324)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><circle r="4.5" fill="#ffc21a"/></g><g transform="translate(200 250) scale(0.8)"><ellipse rx="3" ry="8" cy="-9" transform="rotate(0)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(36)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(72)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(108)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(144)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(180)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(216)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(252)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(288)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><ellipse rx="3" ry="8" cy="-9" transform="rotate(324)" fill="#fff" stroke="#e6e6e6" stroke-width=".5"/><circle r="4.5" fill="#ffc21a"/></g><g fill="#8ed44f"><use href="#cl" x="34" y="160" transform="scale(1.6)" style="transform-box:fill-box"/><use href="#cl" x="205" y="165" transform="scale(1.3)"/><use href="#cl" x="194" y="218"/></g>
+<path d="M30 120c-20 10-14 40 6 36M212 100c18 6 16 34-4 36" stroke="#3fc6a2" stroke-width="1.6" stroke-dasharray="1 5" stroke-linecap="round" fill="none"/></svg><svg class="cf" viewBox="0 0 260 200"><defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#e6d8f6"/><stop offset="1" stop-color="#c9b0ea"/></linearGradient><linearGradient id="wg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd1ee"/><stop offset=".4" stop-color="#bfe6ff"/><stop offset=".7" stop-color="#e3d0ff"/><stop offset="1" stop-color="#fff0b8"/></linearGradient></defs>
+<path d="M130 22A80 80 0 1 0 130 178A100 100 0 0 1 130 22Z" fill="url(#cg)"/><circle cx="60" cy="60" r="1.6" fill="#fff"/><circle cx="52" cy="110" r="1.4" fill="#fff"/><circle cx="85" cy="150" r="1.8" fill="#fff"/><circle cx="100" cy="40" r="1.3" fill="#fff"/>
+<path d="M68 94q7 6 14 0M76 118q7 5 11 -3" stroke="#8a6a9a" stroke-width="1.8" fill="none" stroke-linecap="round"/><circle cx="72" cy="106" r="4" fill="#ffb6d6" opacity=".6"/>
+<g class="fa"><path d="M172 92C188 38 240 28 250 56C254 82 212 102 174 102Z" fill="url(#wg)" opacity=".8" stroke="#fff" stroke-width="1"/><path d="M174 104C205 106 232 132 220 158C198 162 176 132 172 106Z" fill="url(#wg)" opacity=".75" stroke="#fff" stroke-width="1"/><path d="M168 104L180 104L172 116Z" fill="#ffe0cf"/><path d="M150 118h42l14 22h-70Z" fill="#ffc8e8" opacity=".9"/><circle cx="170" cy="84" r="7" fill="#ffe0cf"/><path d="M163 82C165 70 178 72 177 84C174 78 168 78 163 82Z" fill="#d9a86a"/><path d="M166 100L150 82M176 100L196 78M164 140L158 168M178 140L192 160" stroke="#ffe0cf" stroke-width="3" stroke-linecap="round"/></g></svg><svg class="scene" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="mt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5cc0"/><stop offset="1" stop-color="#2d2468"/></linearGradient><linearGradient id="rv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd6f2"/><stop offset=".5" stop-color="#b79cf2"/><stop offset="1" stop-color="#5a58c8"/></linearGradient></defs>
+<path d="M0 230L110 160L200 215L330 130L450 220L560 175L680 225L820 140L940 215L1060 165L1200 230V400H0Z" fill="url(#mt)" opacity=".9"/><path d="M0 270C150 230 300 280 480 250S800 220 960 260 1130 250 1200 270V400H0Z" fill="#1f1a55"/>
+<path class="rv" d="M590 250C610 275 650 280 640 305S575 335 600 360 650 380 640 400H760C780 380 740 360 730 340S790 305 720 285S650 265 640 250Z" fill="url(#rv)"/>
+<g class="ck"><rect x="990" y="288" width="64" height="40" fill="#3b2a66"/><path d="M982 290L1022 258L1062 290Z" fill="#5d3f8c"/><rect x="1036" y="262" width="9" height="18" fill="#3b2a66"/><rect x="1002" y="298" width="12" height="14" fill="#ffd27a"/><rect x="1030" y="298" width="12" height="14" fill="#ffd27a"/></g><g id="fls"></g></svg><div class="sea"></div>
+
+
+
+
+
+
+</div>
+<div class="wrap">
+<header>
+ <div class="brand"><span class="spark" aria-hidden="true">✦</span><div><h1>PTP Tracker</h1><div class="sub" id="today"></div></div></div>
+ <div class="acts" style="margin:0"><button class="btn" id="notif">🔔 Alerts</button><button class="btn" id="imp">⬆ Import</button><input type="file" id="impf" accept=".xlsx,.xls,.csv" hidden><button class="btn p" id="xlsx">⬇ Excel</button><button class="btn" id="csv">⬇ CSV</button></div>
+</header>
+<div class="verse"><div id="vt"></div><button class="btn sm" id="vn" aria-label="Next verse">↻</button></div>
+<div class="mbar"><button class="btn sm" id="mp" aria-label="Previous month">‹</button><select id="mm" aria-label="Month"></select><select id="my" aria-label="Year"></select><button class="btn sm" id="mx" aria-label="Next month">›</button><button class="btn sm" id="mt">This month</button><span class="meta" id="mi"></span></div>
+<div id="remind"></div>
+<div class="stats" id="stats"></div>
+<div id="goal"></div>
+<div class="tabs"><button class="btn tab on" data-t="acc">Accounts</button><button class="btn tab" data-t="wk">Worked accounts</button><button class="btn tab" data-t="pad">Notepad</button><button class="btn tab" data-t="lk">Links</button></div>
+
+<section id="acc">
+ <p class="meta">Each month shows only the accounts that have a payment date in that month. For next month, open the account and tap “+ Payment date”.</p>
+ <div class="bar"><input id="q" placeholder="Search name, customer no., CH code…"><select id="fs"><option value="">All status</option><option value="Pending">Pending</option><option value="Due">Due Today</option><option value="Overdue">Overdue</option><option value="Paid">Paid</option><option value="Full">Fully Paid</option><option value="Partial">Partial</option><option value="BP">BP</option></select><select id="ft"><option value="">All designations</option><option>OLD FOR EPAMS</option><option>OLD EPAMASTER</option><option>NEW SPLIT OTP</option><option>SPLIT-OTP OLD</option><option>FOR EPAMS DECLARATION</option></select><button class="btn p" id="add">+ New PTP</button></div>
+ <div class="list" id="list"></div>
+</section>
+<section id="wk" hidden>
+ <div class="bar"><input id="wq" placeholder="Search worked accounts…"><button class="btn p" id="wadd">+ Worked account</button></div>
+ <p class="meta">Tap an action button to log it for today. Once the customer gives a PTP, tap “Make PTP”.</p>
+ <div class="list" id="wlist"></div>
+</section>
+<section id="pad" hidden>
+ <div class="bar"><button class="btn p" id="addn">+ New note</button></div>
+ <div class="pad" id="notes"></div>
+</section>
+<section id="lk" hidden>
+ <div class="bar"><input id="lq" placeholder="Search links…"><select id="lf"><option value="">All</option><option>Daily</option><option>Important</option><option>Reference</option><option>Done</option></select><button class="btn p" id="ladd">+ Link</button></div>
+ <p class="meta">Save your company links here. The colored dot shows the type: lavender = Daily, pink = Important, gold = Reference, grey = Done.</p>
+ <div class="list" id="llist"></div>
+</section>
+</div>
+
+<dialog id="dAcc"><h2 id="aT">New PTP</h2>
+<div class="fg">
+ <label class="w">Customer name<input id="a_name"></label>
+ <label>CH code<input id="a_ch"></label>
+ <label>Customer no.<input id="a_acct"></label>
+ <label>Phone<input id="a_phone"></label>
+ <label>Full PTP amount (₱)<input id="a_bal" type="number" min="0" step="0.01"></label>
+ <label>Designation<select id="a_des"><option>OLD FOR EPAMS</option><option>OLD EPAMASTER</option><option>NEW SPLIT OTP</option><option>SPLIT-OTP OLD</option><option>FOR EPAMS DECLARATION</option></select></label>
+ <label>Payment arrangement<select id="a_arr"><option>One-time payment</option><option>Split payment</option><option>Installment</option><option>Renegotiated</option><option>Settlement / discount</option></select></label>
+ <label id="a_f1">1st payment date<input id="a_due" type="date"></label>
+ <label id="a_f2">1st payment amount (₱)<input id="a_amt" type="number" min="0" step="0.01"></label>
+</div>
+<p class="meta" id="aErr" style="color:var(--bad)"></p>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dAcc">Cancel</button><button class="btn p" id="saveA">Save</button></div>
+</dialog>
+
+<dialog id="dIns"><h2 id="iT">Add payment</h2>
+<div class="fg"><label>Payment date<input id="i_due" type="date"></label><label>Amount (₱)<input id="i_amt" type="number" min="0" step="0.01"></label></div>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dIns">Cancel</button><button class="btn p" id="saveI">Save</button></div>
+</dialog>
+
+<dialog id="dPay"><h2>Update payment</h2><p class="meta" id="pInfo"></p>
+<div class="fg"><label>Amount received (₱)<input id="p_amt" type="number" min="0" step="0.01"></label><label>Date received<input id="p_date" type="date"></label>
+<label class="w">Next payment date (only if the amount is short)<input id="p_next" type="date"></label></div>
+<p class="meta" id="pErr" style="color:var(--bad)"></p>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dPay">Cancel</button><button class="btn p" id="saveP">Save payment</button></div>
+</dialog>
+
+<dialog id="dMsg"><h2>Reminder message</h2>
+<div class="fg"><label>Send via<select id="m_ch"><option>SMS</option><option>Viber</option><option>WhatsApp</option><option>Email</option></select></label>
+<label>Language<select id="m_lang"><option value="en">English</option><option value="ceb">Bisaya</option></select></label>
+<label class="w">Message type<select id="m_kind"><option value="r">Reminder (before due date)</option><option value="d">Due today</option><option value="o">Overdue / missed promise</option><option value="t">Thank you for payment</option></select></label>
+<label class="w">Message (editable)<textarea id="m_txt"></textarea></label></div>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dMsg">Close</button><button class="btn" id="mLog">Log as sent</button><button class="btn p" id="mCopy">Copy message</button></div>
+</dialog>
+
+<dialog id="dNote"><h2 id="nT">Add note</h2>
+<div class="fg"><label>Action<select id="n_ch"><option>PD Call</option><option>Manual Call</option><option>Email</option><option>SMS</option><option>Viber</option><option>WhatsApp</option></select></label>
+<label>Date<input id="n_d" type="date"></label>
+<label class="w">Template<select id="n_tp"><option value="">— choose a template —</option><option value="1">Spoke to customer — PTP</option><option value="2">No answer / voicemail</option><option value="3">Asked to move date</option><option value="4">Payment confirmed</option><option value="5">Reminder sent</option></select></label>
+<label class="w">Note<textarea id="n_t"></textarea></label></div>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dNote">Cancel</button><button class="btn p" id="saveN">Save note</button></div>
+</dialog>
+
+<dialog id="dW"><h2 id="wT">Worked account</h2>
+<div class="fg"><label class="w">Customer name<input id="w_name"></label><label>Customer no.<input id="w_acct"></label><label>Phone<input id="w_phone"></label></div>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dW">Cancel</button><button class="btn p" id="saveW">Save</button></div>
+</dialog>
+
+<dialog id="dL"><h2 id="lT">Add link</h2>
+<div class="fg"><label class="w">Title<input id="l_t"></label><label class="w">Link (URL)<input id="l_u" placeholder="https://"></label>
+<label>Type<select id="l_k"><option>Daily</option><option>Important</option><option>Reference</option><option>Done</option></select></label><label class="w">Note (optional)<input id="l_n"></label></div>
+<p class="meta" id="lErr" style="color:var(--bad)"></p>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dL">Cancel</button><button class="btn p" id="saveL">Save link</button></div>
+</dialog>
+<dialog id="dT"><h2>Monthly target</h2><div class="fg"><label class="w">Target (₱)<input id="t_v" type="number" min="0"></label></div><div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dT">Cancel</button><button class="btn p" id="saveT">Save target</button></div></dialog>
+<dialog id="dC"><h2 id="cT">Delete?</h2><p id="cM"></p>
+<div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dC">Cancel</button><button class="btn p" id="cOk">Yes, delete</button></div>
+</dialog>
+<dialog id="dX"><h2>Copy your CSV</h2><p class="meta">Downloads are not available here. Copy this, paste it in Excel or Notepad, and save as .csv.</p><textarea id="x_t" style="width:100%;min-height:200px"></textarea><div class="acts" style="justify-content:flex-end"><button class="btn" data-x="dX">Close</button><button class="btn p" id="xCopy">Copy</button></div></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s),KEY='ptp.v3',LK='ptp.links.v1',WK='ptp.worked.v1',NK='ptp.notes.v1';
+const peso=n=>'₱'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const TODAY=iso(new Date());
+const diff=s=>Math.round((new Date(s+'T00:00:00')-new Date(TODAY+'T00:00:00'))/864e5);
+const fmt=s=>s?new Date(s+'T00:00:00').toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}):'—';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ORD=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'],LBL={Pending:'Pending',Due:'Due Today',Overdue:'Overdue',Paid:'Paid',Full:'Fully Paid',Partial:'Partial',BP:'BP'};
+const ACTS=['PD Call','Manual Call','Email','SMS','Viber','WhatsApp'];
+const VERSES=[['Philippians 4:13','I can do all things through Christ which strengtheneth me.'],['Proverbs 3:5','Trust in the LORD with all thine heart; and lean not unto thine own understanding.'],['Psalm 23:1','The LORD is my shepherd; I shall not want.'],['Isaiah 41:10','Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee.'],['Joshua 1:9','Be strong and of a good courage; be not afraid, neither be thou dismayed: for the LORD thy God is with thee whithersoever thou goest.'],['Proverbs 16:3','Commit thy works unto the LORD, and thy thoughts shall be established.'],['Colossians 3:23','And whatsoever ye do, do it heartily, as to the Lord, and not unto men;'],['Galatians 6:9','And let us not be weary in well doing: for in due season we shall reap, if we faint not.'],['Matthew 6:33','But seek ye first the kingdom of God, and his righteousness; and all these things shall be added unto you.'],['Psalm 46:1','God is our refuge and strength, a very present help in trouble.'],['Psalm 121:2','My help cometh from the LORD, which made heaven and earth.'],['Ecclesiastes 3:1','To every thing there is a season, and a time to every purpose under the heaven.']];
+let data=[],work=[],notes=[],links=[],VIEW=[],VM={},MV=[],target=2000000,cur=null,vi=Math.floor(Date.now()/864e5)%VERSES.length;
+function load(){const g=(k)=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
+ data=g(KEY);work=g(WK);notes=g(NK);links=g(LK);if(!Array.isArray(links))links=[];
+ if(!Array.isArray(data)){data=SEED();save()}
+ if(!Array.isArray(work)){work=WSEED();saveW()}
+ if(!Array.isArray(notes)){notes=[{id:1,t:'Daily to-do',b:'• Call all PTPs due today\n• Send reminders for the 3-day list\n• Log worked accounts'}];saveN()}}
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const save=()=>put(KEY,data),saveW=()=>put(WK,work),saveN=()=>put(NK,notes),saveL=()=>put(LK,links);
+const isOpen=i=>!i.bp&&!(i.paid>0);
+function istat(i){if(i.bp)return'BP';if(i.paid>0)return i.paid>=i.amt?'Paid':'Partial';const d=diff(i.due);return d<0?'Overdue':d===0?'Due':'Pending'}
+const dts=i=>[...(i.hist||[]),i.due].sort(),RMK=['PTP','PAID','PARTIAL','BP','PERRENNIAL','FOR RENEGO','DONE CERT'],autoR={Pending:'PTP',Due:'PTP',Overdue:'PTP',Paid:'PAID',Full:'PAID',Partial:'PARTIAL',BP:'BP'};
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const curM=()=>$('#my').value+'-'+$('#mm').value;
+function goM(M){const y=M.slice(0,4);if(![...$('#my').options].some(o=>o.value===y))$('#my').add(new Option(y,y));$('#my').value=y;$('#mm').value=M.slice(5,7);render()}
+function shiftM(d){const t=new Date(+$('#my').value,+$('#mm').value-1+d,1);goM(iso(t).slice(0,7))}
+function initM(){try{target=+localStorage.getItem('ptp.target')||2000000}catch(e){}const y0=+TODAY.slice(0,4);$('#mm').innerHTML=MN.map((n,i)=>`<option value="${String(i+1).padStart(2,'0')}">${n}</option>`).join('');$('#my').innerHTML=[y0-1,y0,y0+1,y0+2].map(y=>`<option>${y}</option>`).join('');$('#my').value=y0;$('#mm').value=TODAY.slice(5,7)}
+function info(a,cut){let ins=[...a.inst];if(cut)ins=ins.map(i=>{const ds=dts(i).filter(d=>d<=cut);if(!ds.length)return null;return{...i,due:ds[ds.length-1],...(i.paid>0&&i.on>cut?{paid:0,on:''}:{})}}).filter(Boolean);ins.sort((x,y)=>x.due.localeCompare(y.due));const op=ins.filter(isOpen),paid=ins.reduce((s,i)=>s+(i.paid||0),0),rem=op.reduce((s,i)=>s+i.amt,0),nx=op[0]||null;
+ let st;if(nx)st=istat(nx);else if(ins.some(i=>i.bp))st='BP';else if(paid>=a.bal&&paid>0)st='Full';else if(a.part)st='Partial';else st='Paid';
+ return{ins,op,paid,rem,nx,st}}
+const find=id=>data.find(a=>a.id===id);
+function render(){
+ $('#today').textContent='Today is '+fmt(TODAY)+' · '+moonStr();renderLinks();
+ $('#vt').innerHTML=`${esc(VERSES[vi][1])}<small>${VERSES[vi][0]} (KJV)</small>`;
+ const M=curM(),y=+M.slice(0,4),mo=+M.slice(5),start=M+'-01',end=iso(new Date(y,mo,0)),prevEnd=iso(new Date(y,mo-1,0));
+ const infG=data.map(a=>[a,info(a)]);
+ const inM=a=>a.inst.some(i=>dts(i).some(d=>d>=start&&d<=end));
+ const vis=data.filter(inM);
+ const inf=vis.map(a=>[a,info(a,end)]);VIEW=inf;VM={start,end};
+ 
+ 
+ 
+ const coll=data.reduce((t,a)=>t+a.inst.reduce((u,i)=>u+(i.paid>0&&i.on>=start&&i.on<=end?i.paid:0),0),0);
+ $('#mi').textContent=MN[mo-1]+' '+y+' · '+vis.length+' account(s)';
+ const items=[];infG.forEach(([a,x])=>x.op.forEach(i=>{if(diff(i.due)<=3)items.push([a,i,x])}));items.sort((p,q)=>p[1].due.localeCompare(q[1].due));
+ $('#remind').innerHTML=items.length?`<div class="remind"><h2>🔔 Follow-up reminders</h2>${items.map(([a,i,x])=>{const d=diff(i.due),w=d<0?`${-d} day(s) overdue`:d===0?'due today':`due in ${d} day(s)`;return `<div><span><b>${esc(a.name)}</b> — ${w} (${fmt(i.due)}) · collect <b>${peso(i.amt)}</b></span><button class="btn sm" data-a="msg:${a.id}">💬 Message</button></div>`}).join('')}</div>`:'';
+ const c=f=>inf.filter(([a,x])=>x.nx&&f(diff(x.nx.due))).length;
+ $('#stats').innerHTML=[['Accounts',inf.length],['Total PTP',peso(inf.reduce((s,[a])=>s+a.bal,0))],['Collected this month',peso(coll)],['Total BP',peso(inf.filter(([a,x])=>x.st==='BP').reduce((s,[a])=>s+a.bal,0))],['Due today',c(d=>d===0)],['Due in 3 days',c(d=>d>0&&d<=3)],['Overdue',c(d=>d<0)],['Worked (no PTP)',work.length]].map(([k,v])=>`<div class="stat"><small>${k}</small><b>${v}</b></div>`).join('');
+ const pct=target?coll/target*100:0,lv=pct<50?'bad':pct<100?'mid':'ok',gap=Math.max(0,target-coll);
+ $('#goal').innerHTML=`<div class="goal g-${lv}"><div class="row"><div><b>Target ${peso(target)}</b> <span class="meta">${MN[mo-1]} ${y}</span></div><div><b>${peso(coll)}</b> posted · <b>${pct.toFixed(1)}%</b></div></div><div class="pbar"><i style="width:${Math.min(100,pct)}%"></i></div><div class="row"><div class="gmsg">${lv==='bad'?`⚠ LACK OF COMMISSION — you are only at ${pct.toFixed(1)}% of your target. ${peso(gap)} more to go.`:lv==='mid'?`Almost there — ${peso(gap)} more to reach your target.`:'🎉 Target reached — commission secured!'}</div><button class="btn sm" data-a="tg:0">Edit target</button></div></div>`;
+ const q=$('#q').value.toLowerCase(),fs=$('#fs').value,ft=$('#ft').value;
+ const rows=inf.filter(([a,x])=>(!q||(a.name+a.acct+(a.ch||'')+(a.phone||'')).toLowerCase().includes(q))&&(!fs||x.st===fs)&&(!ft||a.des===ft)).sort((p,q)=>(p[1].nx?p[1].nx.due:'9').localeCompare(q[1].nx?q[1].nx.due:'9'));
+ $('#list').innerHTML=rows.length?rows.map(([a,x])=>card(a,x)).join(''):'<div class="empty">No accounts found. Tap “+ New PTP” to add one.</div>';
+ const wq=$('#wq').value.toLowerCase();
+ const w=work.filter(a=>!wq||(a.name+a.acct).toLowerCase().includes(wq));
+ $('#wlist').innerHTML=w.length?w.map(wcard).join(''):'<div class="empty">No worked accounts yet. Tap “+ Worked account”.</div>';
+ $('#notes').innerHTML=notes.map(n=>`<div class="card"><input data-nt="${n.id}" value="${esc(n.t)}" aria-label="Note title"><textarea data-nb="${n.id}" aria-label="Note body">${esc(n.b)}</textarea><button class="btn sm d" data-a="dn:${n.id}">Delete</button></div>`).join('')||'<div class="empty">No notes yet.</div>';
+}
+const KC={Daily:'k1',Important:'k2',Reference:'k3',Done:'k4'};
+function renderLinks(){const set=(k,n,l)=>{const b=document.querySelector('[data-t="'+k+'"]');if(b)b.innerHTML=l+' <span class="bd">'+n+'</span>'};set('acc',data.length,'Accounts');set('wk',work.length,'Worked accounts');set('pad',notes.length,'Notepad');set('lk',links.length,'Links');
+ const q=$('#lq').value.toLowerCase(),f=$('#lf').value,L=links.filter(l=>(!q||(l.t+l.u+l.n).toLowerCase().includes(q))&&(!f||l.k===f));
+ $('#llist').innerHTML=L.length?L.map(l=>`<div class="card"><div class="row"><div><div class="nm"><span class="dot ${KC[l.k]}"></span>${esc(l.t)}</div><div class="lnk">${esc(l.u)}</div>${l.n?`<div class="meta">${esc(l.n)}</div>`:''}</div><span class="tag t">${esc(l.k)}</span></div><div class="acts"><a class="btn sm p" href="${esc(l.u)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Open</a><button class="btn sm" data-a="lc:${l.id}">Copy link</button><button class="btn sm" data-a="le:${l.id}">Edit</button><button class="btn sm d" data-a="ld:${l.id}">Delete</button></div></div>`).join(''):'<div class="empty">No links yet. Tap “+ Link” to add your first one.</div>'}
+function card(a,x){const nx=x.nx,rm=a.rmk??a.remark??'';
+ return `<div class="card"><div class="row"><div><div class="nm">${esc(a.name)}</div><div class="meta">${esc(a.ch||'')} · ${esc(a.acct)}${a.phone?' · '+esc(a.phone):''}</div></div><div><span class="tag ${x.st}">${LBL[x.st]}</span><span class="tag t">${esc(a.des)}</span><span class="tag t">${esc(a.arr)}</span></div></div>
+ <div class="nums"><div>Full PTP<b>${peso(a.bal)}</b></div><div>Paid<b>${peso(x.paid)}</b></div><div class="g">Remaining to collect<b>${peso(x.rem)}</b></div><div>Next payment<b>${nx?peso(nx.amt)+' · '+fmt(nx.due):'—'}</b></div></div><label class="rmk">Payment remarks<input data-rm="${a.id}" value="${esc(rm)}" placeholder="Type your remarks here…"></label>
+ ${x.ins.map((i,k)=>{const s=istat(i);return `<div class="ins"><span>${ORD[k]||k+1+'th'} payment · <b>${peso(i.amt)}</b> · ${fmt(i.due)}${i.hist&&i.hist[0]!==i.due?` <span class="meta">(was ${fmt(i.hist[0])})</span>`:''} <span class="tag ${s}">${LBL[s]}</span>${i.paid>0?`<span class="meta">received ${peso(i.paid)} on ${fmt(i.on)}</span>`:''}</span><span class="acts" style="margin:0">${isOpen(i)?`<button class="btn sm p" data-a="ip:${a.id}:${i.id}">✓ Paid</button><button class="btn sm" data-a="iu:${a.id}:${i.id}">Update</button><button class="btn sm" data-a="ib:${a.id}:${i.id}">BP</button>`:''}<button class="btn sm" data-a="ie:${a.id}:${i.id}">Edit</button><button class="btn sm d" data-a="id:${a.id}:${i.id}" aria-label="Delete payment">✕</button></span></div>`}).join('')}
+ <div class="acts">${nx?`<button class="btn sm p" data-a="ip:${a.id}:${nx.id}">✓ Mark paid</button>`:''}<button class="btn sm" data-a="ia:${a.id}">+ Payment date</button><button class="btn sm" data-a="msg:${a.id}">💬 Message</button><button class="btn sm" data-a="note:${a.id}">📝 Note</button><button class="btn sm" data-a="edit:${a.id}">Edit</button><button class="btn sm d" data-a="del:${a.id}">Delete</button></div>
+ ${(a.notes||[]).slice().reverse().map((n,k,arr)=>`<div class="note"><span><b>${esc(n.ch)}</b> · ${fmt(n.d)} — ${esc(n.t)}</span><button class="btn sm d" data-a="nd:${a.id}:${arr.length-1-k}" aria-label="Delete note">✕</button></div>`).join('')}</div>`}
+function wcard(a){return `<div class="card"><div class="row"><div><div class="nm">${esc(a.name)}</div><div class="meta">${esc(a.acct||'')}${a.phone?' · '+esc(a.phone):''}</div></div><span class="tag t">${a.log.length} action(s)</span></div>
+ <div class="acts">${ACTS.map(t=>`<button class="btn sm" data-a="wl:${a.id}:${t}">${t}</button>`).join('')}</div>
+ <div class="acts"><button class="btn sm" data-a="wn:${a.id}">📝 Log with note</button><button class="btn sm p" data-a="wp:${a.id}">Make PTP</button><button class="btn sm" data-a="we:${a.id}">Edit</button><button class="btn sm d" data-a="wd:${a.id}">Delete</button></div>
+ ${a.log.slice().reverse().map((n,k,arr)=>`<div class="note"><span><b>${esc(n.ch)}</b> · ${fmt(n.d)}${n.t?' — '+esc(n.t):''}</span><button class="btn sm d" data-a="wx:${a.id}:${arr.length-1-k}" aria-label="Delete log">✕</button></div>`).join('')}</div>`}
+function toast(m,fn){const t=$('#toast');t.innerHTML=esc(m)+(fn?' <button class="btn sm" id="undo">Undo</button>':'');t.style.display='block';t.fn=fn;clearTimeout(t.tt);t.tt=setTimeout(()=>t.style.display='none',6000)}
+function ask(title,msg,fn,lbl){$('#cOk').textContent=lbl||'Yes, delete';$('#cT').textContent=title;$('#cM').textContent=msg;$('#cOk').onclick=()=>{$('#dC').close();fn()};$('#dC').showModal()}
+const nid=()=>Date.now()+Math.floor(Math.random()*1000);
+function payNow(a,i){const snap=JSON.stringify(a);i.paid=i.amt;i.on=TODAY;(a.notes=a.notes||[]).push({d:TODAY,ch:'Manual Call',t:'Marked paid: '+peso(i.amt)+'.'});save();render();toast(a.name+' marked paid',()=>{Object.assign(a,JSON.parse(snap));save();render()})}
+function tpl(a,kind,lang){const x=info(a),i=x.nx||x.ins[x.ins.length-1]||{amt:0,due:TODAY},f=(a.name.split(' ')[0]||'').replace(/^./,c=>c.toUpperCase()).toLowerCase().replace(/^./,c=>c.toUpperCase()),m=peso(i.amt),d=fmt(i.due);
+ const T={en:{r:`Hi ${f}, this is a friendly reminder of your payment of ${m} due on ${d} for account ${a.acct}. Please send your proof of payment once done. Thank you!`,d:`Good day ${f}! Your promised payment of ${m} is due today (${d}). Kindly send your proof of payment once paid. Thank you!`,o:`Hi ${f}, we have not yet received the payment of ${m} you promised on ${d}. May we know when you can pay? Please reply so we can update your account. Thank you.`,t:`Hi ${f}, we received your payment of ${m}. Thank you!`},ceb:{r:`Maayong adlaw ${f}! Paalala lang sa imong bayronon nga ${m} sa ${d} para sa account ${a.acct}. Palihog i-send ang proof of payment kung nakabayad na. Salamat!`,d:`Maayong adlaw ${f}! Karong adlawa (${d}) ang due sa imong PTP nga ${m}. Palihog i-send ang proof of payment kung nakabayad na. Salamat!`,o:`Maayong adlaw ${f}, wala pa namo madawat ang imong PTP nga ${m} para sa ${d}. Kanus-a ka makabayad? Palihog tubaga kami aron ma-update ang imong account. Salamat.`,t:`Salamat ${f}! Nadawat na namo ang imong bayad nga ${m}.`}};
+ return T[lang][kind]}
+function msgFill(){const a=cur.a;let t=tpl(a,$('#m_kind').value,$('#m_lang').value);if($('#m_ch').value==='Email')t='Subject: Payment reminder — '+a.acct+'\n\n'+t;$('#m_txt').value=t}
+function noteTpl(a,v){const x=info(a),n=x.nx;const p=n?peso(n.amt)+' on '+fmt(n.due):'';return {1:`Spoke to ${a.name}. Promised to pay ${p}.`,2:`Called ${a.name} — no answer. Will retry.`,3:`${a.name} asked to move the payment date. New date: `,4:`Payment confirmed by ${a.name}. Amount: `,5:`Sent payment reminder for ${p}.`}[v]||''}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.id==='undo'){const f=$('#toast').fn;if(f)f();$('#toast').style.display='none';return}
+ if(t.dataset.x)$('#'+t.dataset.x).close();
+ if(t.dataset.t){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b===t));['acc','wk','pad','lk'].forEach(k=>$('#'+k).hidden=k!==t.dataset.t)}
+ if(!t.dataset.a)return;const[act,p1,p2]=t.dataset.a.split(':'),id=+p1,a=find(id),iid=+p2,i=a&&a.inst.find(z=>z.id===iid),w=work.find(z=>z.id===id);
+ if(act==='tg'){$('#t_v').value=target;$('#dT').showModal()}
+ const L=links.find(z=>z.id===id);
+ if(act==='lc'&&L){const ta=document.createElement('textarea');ta.value=L.u;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();try{navigator.clipboard.writeText(L.u);ok=true}catch(e){}toast(ok?'Link copied':'Press and hold the link to copy')}
+ if(act==='le'&&L){cur={L};$('#lT').textContent='Edit link';$('#l_t').value=L.t;$('#l_u').value=L.u;$('#l_k').value=L.k;$('#l_n').value=L.n||'';$('#lErr').textContent='';$('#dL').showModal()}
+ if(act==='ld'&&L)ask('Delete link?','Remove “'+L.t+'”?',()=>{links=links.filter(z=>z!==L);saveL();render()});
+ if(act==='ip'&&i)payNow(a,i);
+ if(act==='iu'&&i){cur={a,i};$('#pInfo').innerHTML=`<b>${esc(a.name)}</b> · expected ${peso(i.amt)} on ${fmt(i.due)}`;$('#p_amt').value=i.amt;$('#p_date').value=TODAY;$('#p_next').value='';$('#pErr').textContent='';$('#dPay').showModal()}
+ if(act==='ib'&&i){i.bp=true;(a.notes=a.notes||[]).push({d:TODAY,ch:'Manual Call',t:'Broken promise: '+peso(i.amt)+' due '+fmt(i.due)+'.'});save();render()}
+ if(act==='id'&&i)ask('Delete payment?','Remove this payment date for '+a.name+'?',()=>{a.inst=a.inst.filter(z=>z.id!==iid);save();render()});
+ if(act==='ia'||act==='ie'){cur={a,i:act==='ie'?i:null};$('#iT').textContent=act==='ie'?'Edit payment':'Add payment date';const xx=info(a);$('#i_due').value=i?i.due:curM()+'-01';$('#i_amt').value=i?i.amt:(xx.rem||Math.max(0,a.bal-xx.paid));$('#dIns').showModal()}
+ if(act==='msg'&&a){cur={a};$('#m_ch').value='SMS';const x=info(a),d=x.nx?diff(x.nx.due):null;$('#m_kind').value=d===null?'t':d<0?'o':d===0?'d':'r';msgFill();$('#dMsg').showModal()}
+ if(act==='note'&&a){cur={a};$('#nT').textContent='Add note — '+a.name;$('#n_d').value=TODAY;$('#n_tp').value='';$('#n_t').value='';$('#dNote').showModal()}
+ if(act==='nd'&&a)ask('Delete note?','Remove this note?',()=>{a.notes.splice(+p2,1);save();render()});
+ if(act==='edit'&&a){cur={a};$('#aT').textContent='Edit account';const m={name:a.name,ch:a.ch||'',acct:a.acct,phone:a.phone||'',bal:a.bal,des:a.des,arr:a.arr};for(const k in m)$('#a_'+k).value=m[k];$('#a_f1').hidden=$('#a_f2').hidden=true;$('#aErr').textContent='';$('#dAcc').showModal()}
+ if(act==='del'&&a)ask('Delete account?','Delete '+a.name+' and all its payments and notes? This cannot be undone.',()=>{data=data.filter(z=>z.id!==id);save();render()});
+ if(act==='dn')ask('Delete note?','Remove this notepad note?',()=>{notes=notes.filter(n=>n.id!==id);saveN();render()});
+ if(act==='wl'&&w){const snap=JSON.stringify(w);w.log.push({d:TODAY,ch:p2,t:''});saveW();render();toast(p2+' logged for '+w.name,()=>{Object.assign(w,JSON.parse(snap));saveW();render()})}
+ if(act==='wn'&&w){cur={w};$('#nT').textContent='Log action — '+w.name;$('#n_d').value=TODAY;$('#n_tp').value='';$('#n_t').value='';$('#dNote').showModal()}
+ if(act==='wx'&&w)ask('Delete log?','Remove this log entry?',()=>{w.log.splice(+p2,1);saveW();render()});
+ if(act==='wd'&&w)ask('Delete worked account?','Delete '+w.name+' from the worked list?',()=>{work=work.filter(z=>z.id!==id);saveW();render()});
+ if(act==='we'&&w){cur={w};$('#wT').textContent='Edit worked account';$('#w_name').value=w.name;$('#w_acct').value=w.acct||'';$('#w_phone').value=w.phone||'';$('#dW').showModal()}
+ if(act==='wp'&&w){openAcc({name:w.name,acct:w.acct||'',phone:w.phone||'',from:w.id})}
+});
+function openAcc(o={}){cur={from:o.from};$('#aT').textContent='New PTP';const m={name:o.name||'',ch:'',acct:o.acct||'',phone:o.phone||'',bal:'',des:'OLD FOR EPAMS',arr:'One-time payment',due:curM()===TODAY.slice(0,7)?'':curM()+'-01',amt:''};for(const k in m)$('#a_'+k).value=m[k];$('#a_f1').hidden=$('#a_f2').hidden=false;$('#aErr').textContent='';$('#dAcc').showModal()}
+$('#add').onclick=()=>openAcc();
+$('#saveA').onclick=()=>{const v=k=>$('#a_'+k).value,name=v('name').trim();
+ if(!name){$('#aErr').textContent='Please enter the customer name.';return}
+ const o={name,ch:v('ch').trim(),acct:v('acct').trim(),phone:v('phone').trim(),bal:+v('bal')||0,des:v('des'),arr:v('arr')};
+ if(cur&&cur.a){Object.assign(cur.a,o)}else{
+  if(!v('due')){$('#aErr').textContent='Please set the 1st payment date.';return}
+  if(o.acct&&data.some(a=>a.acct===o.acct)){$('#aErr').textContent='This customer no. already exists — open that account and use “+ Payment date”.';return}
+  const amt=+v('amt')||0,w=cur&&cur.from?work.find(z=>z.id===cur.from):null;
+  data.push({id:nid(),...o,bal:o.bal||amt,remark:'',inst:[{id:nid(),due:v('due'),amt,paid:0,on:'',bp:false}],notes:w?w.log.map(l=>({d:l.d,ch:l.ch,t:l.t||'Worked before PTP'})):[]});
+  if(w){work=work.filter(z=>z!==w);saveW()}}
+ if(!(cur&&cur.a)&&v('due'))goM(v('due').slice(0,7));save();$('#dAcc').close();render()};
+$('#saveI').onclick=()=>{const due=$('#i_due').value,amt=+$('#i_amt').value||0;if(!due)return;const{a,i}=cur;if(i){i.due=due;i.amt=amt}else a.inst.push({id:nid(),due,amt,paid:0,on:'',bp:false});save();$('#dIns').close();render();if(due.slice(0,7)!==curM())toast('Added to '+MN[+due.slice(5,7)-1]+' '+due.slice(0,4))};
+$('#saveP').onclick=()=>{const{a,i}=cur,amt=+$('#p_amt').value,nx=$('#p_next').value;if(!(amt>0)){$('#pErr').textContent='Enter the amount received.';return}
+ if(amt<i.amt&&!nx){$('#pErr').textContent='The amount is short — set the next payment date.';return}
+ i.paid=amt;i.on=$('#p_date').value||TODAY;if(amt<i.amt)a.inst.push({id:nid(),due:nx,amt:Math.round((i.amt-amt)*100)/100,paid:0,on:'',bp:false});
+ (a.notes=a.notes||[]).push({d:TODAY,ch:'Manual Call',t:`Received ${peso(amt)}.`+(amt<i.amt?' Next payment '+fmt(nx)+'.':'')});save();$('#dPay').close();render()};
+['#m_ch','#m_lang','#m_kind'].forEach(s=>$(s).onchange=msgFill);
+$('#mCopy').onclick=()=>{const t=$('#m_txt');let ok=false;try{navigator.clipboard.writeText(t.value);ok=true}catch(e){}if(!ok){t.select();try{ok=document.execCommand('copy')}catch(e){}}toast(ok?'Copied — paste it in '+$('#m_ch').value:'Select the text and copy it')};
+$('#mLog').onclick=()=>{const a=cur.a;(a.notes=a.notes||[]).push({d:TODAY,ch:$('#m_ch').value,t:'Sent reminder: '+$('#m_txt').value.replace(/\n+/g,' ')});save();$('#dMsg').close();render();toast('Logged as sent')};
+$('#n_tp').onchange=()=>{const a=cur.a||{name:cur.w.name,inst:[]};$('#n_t').value=noteTpl(a,$('#n_tp').value)};
+$('#saveN').onclick=()=>{const e={d:$('#n_d').value||TODAY,ch:$('#n_ch').value,t:$('#n_t').value.trim()};if(cur.a){if(!e.t)return;(cur.a.notes=cur.a.notes||[]).push(e);save()}else{cur.w.log.push(e);saveW()}$('#dNote').close();render()};
+$('#wadd').onclick=()=>{cur={w:null};$('#wT').textContent='New worked account';['name','acct','phone'].forEach(k=>$('#w_'+k).value='');$('#dW').showModal()};
+$('#saveW').onclick=()=>{const name=$('#w_name').value.trim();if(!name)return;const o={name,acct:$('#w_acct').value.trim(),phone:$('#w_phone').value.trim()};if(cur.w)Object.assign(cur.w,o);else work.unshift({id:nid(),...o,log:[]});saveW();$('#dW').close();render()};
+$('#ladd').onclick=()=>{cur={L:null};$('#lT').textContent='Add link';['t','u','n'].forEach(k=>$('#l_'+k).value='');$('#l_k').value='Daily';$('#lErr').textContent='';$('#dL').showModal()};
+$('#saveL').onclick=()=>{const t=$('#l_t').value.trim();let u=$('#l_u').value.trim();if(!t){$('#lErr').textContent='Please enter a title.';return}
+ if(u&&!/^[a-z][a-z0-9+.-]*:/i.test(u))u='https://'+u;if(!/^https?:\/\/[^\s.]+\.\S+/i.test(u)){$('#lErr').textContent='Please enter a valid web link (https://…).';return}
+ const o={t,u,k:$('#l_k').value,n:$('#l_n').value.trim()};if(cur.L)Object.assign(cur.L,o);else links.unshift({id:nid(),...o});saveL();$('#dL').close();render()};
+$('#saveT').onclick=()=>{const v=+$('#t_v').value;if(v>0){target=v;try{localStorage.setItem('ptp.target',v)}catch(e){}}$('#dT').close();render()};
+document.addEventListener('change',e=>{const el=e.target.closest&&e.target.closest('[data-rm]');if(el){const a=find(+el.dataset.rm);if(a){a.rmk=el.value;save()}}});
+$('#addn').onclick=()=>{notes.unshift({id:nid(),t:'New note',b:''});saveN();render()};
+$('#notes').addEventListener('input',e=>{const t=e.target,n=notes.find(x=>x.id===+(t.dataset.nt||t.dataset.nb));if(!n)return;if(t.dataset.nt)n.t=t.value;else n.b=t.value;saveN()});
+['#q','#fs','#ft','#wq','#lq','#lf','#mm','#my'].forEach(s=>$(s).addEventListener('input',render));
+$('#vn').onclick=()=>{vi=(vi+1)%VERSES.length;render()};
+const payRows=()=>{const r=[['Name','CH code','Customer no.','Designation','Arrangement','Account status','Full PTP','Payment #','Due date','Amount','Status','Received','Received on','Payment remarks']];VIEW.forEach(([a,x])=>{x.ins.forEach((i,k)=>r.push([a.name,a.ch||'',String(a.acct),a.des,a.arr,LBL[x.st],a.bal,k+1,i.due,i.amt,LBL[istat(i)],i.paid||0,i.on||'',a.rmk??a.remark??'']))});return r};
+const accRows=()=>[['Name','CH code','Customer no.','Designation','Arrangement','Status','Full PTP','Total paid','Remaining to collect','Next due','Next amount','Payment remarks']].concat(VIEW.map(([a,x])=>{return[a.name,a.ch||'',String(a.acct),a.des,a.arr,LBL[x.st],a.bal,x.paid,x.rem,x.nx?x.nx.due:'',x.nx?x.nx.amt:'',a.rmk??a.remark??'']}));
+const workRows=()=>[['Name','Customer no.','Phone','Date','Action','Note']].concat(work.flatMap(a=>a.log.length?a.log.map(l=>[a.name,String(a.acct||''),a.phone||'',l.d,l.ch,l.t||'']):[[a.name,String(a.acct||''),a.phone||'','','','']]));
+const linkRows=()=>[['Title','Link','Type','Note']].concat(links.map(l=>[l.t,l.u,l.k,l.n||'']));
+const toCSV=r=>r.map(x=>x.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+async function saveFile(name,data,csv){let d=null;try{d=window.claude&&claude.use?await claude.use('downloads'):null}catch(e){}
+ if(!d){if(csv){$('#x_t').value=csv;$('#dX').showModal()}else{try{const u=URL.createObjectURL(data),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();toast('Saved '+name)}catch(e){toast('Download is not available here — use CSV')}}return}
+ try{await d.save({filename:name,data});toast('Saved '+name)}catch(e){if(e&&e.code==='declined')return;if(csv){$('#x_t').value=csv;$('#dX').showModal()}else toast('Could not save the file — try CSV')}}
+$('#csv').onclick=()=>{const c=toCSV(payRows());saveFile('ptp-'+curM()+'.csv','\ufeff'+c,c)};
+$('#xlsx').onclick=()=>{if(!window.XLSX){toast('Excel tool did not load — use CSV');return}
+ const wb=XLSX.utils.book_new();[['PTP Payments',payRows()],['Accounts',accRows()],['Worked accounts',workRows()],['Links',linkRows()]].forEach(([n,r])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),n));
+ saveFile('ptp-tracker-'+curM()+'.xlsx',new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})]))};
+$('#xCopy').onclick=()=>{const t=$('#x_t');t.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}toast(ok?'Copied':'Select all and copy')};
+$('#notif').onclick=()=>{if(!('Notification' in window)){toast('Alerts are not supported here');return}Notification.requestPermission().then(p=>{if(p==='granted')ping(true)})};
+function ping(f){if(!('Notification' in window)||Notification.permission!=='granted')return;const k='ptp.ping.'+TODAY;let d=null;try{d=localStorage.getItem(k)}catch(e){}if(d&&!f)return;
+ const s=[];data.forEach(a=>info(a).op.forEach(i=>{if(diff(i.due)<=3)s.push(a.name+' — '+peso(i.amt)+' ('+fmt(i.due)+')')}));if(!s.length)return;try{new Notification('PTP reminders',{body:s.slice(0,4).join('\n')});localStorage.setItem(k,'1')}catch(e){}}
+function moonStr(){const f=(((Date.now()-947182440000)/864e5)%29.530588+29.530588)%29.530588/29.530588,i=Math.round(f*8)%8,N=['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];return ['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][i]+' '+N[i]+' · '+Math.round((1-Math.cos(2*Math.PI*f))/2*100)+'% lit'}
+const SEED=()=>[{"id":1,"ch":"07BPPC2603-326","acct":"201002202427037","name":"DEENA RAIZA SADJAIL ASAALI","phone":"","bal":12500.0,"des":"OLD FOR EPAMS","arr":"Split payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":2,"due":"2026-10-02","amt":7500.0,"paid":7500.0,"on":"2026-10-02","bp":false},{"id":48,"due":"2026-10-23","amt":12500.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":3,"ch":"07BPPC2601-928","acct":"0201004201694348","name":"IRISH MAE C BUENAVENTURA","phone":"","bal":5000.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":4,"due":"2026-10-05","amt":5000.0,"paid":5000.0,"on":"2026-10-05","bp":false}],"notes":[]},{"id":5,"ch":"07BPPC2603-393","acct":"201004106362230","name":"RALPH DUSTIN L NGO","phone":"","bal":40305.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":6,"due":"2026-10-08","amt":21000.0,"paid":21000.0,"on":"2026-10-08","bp":false}],"notes":[]},{"id":7,"ch":"07BPPC2604-939","acct":"201001101819069","name":"JOVEN ANDREI O ENRICUSO","phone":"","bal":11000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":8,"due":"2026-10-09","amt":11000.0,"paid":11000.0,"on":"2026-10-09","bp":false}],"notes":[]},{"id":9,"ch":"07BPPC2404-388","acct":"201001104905311","name":"HANNAH MAY C LUALHATI","phone":"","bal":20000.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":10,"due":"2026-10-10","amt":20000.0,"paid":20000.0,"on":"2026-10-10","bp":false}],"notes":[]},{"id":11,"ch":"BPCC05X2607-784","acct":"0201004207609365","name":"POINSETTIA MAIA S GONZALEZ","phone":"","bal":11900.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":12,"due":"2026-10-12","amt":11900.0,"paid":11900.0,"on":"2026-10-12","bp":false}],"notes":[]},{"id":13,"ch":"07BPPC2604-784","acct":"201004102975225","name":"PHYLLIS MARIE SOCO TEANCO","phone":"","bal":5700.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":14,"due":"2026-10-12","amt":5700.0,"paid":5700.0,"on":"2026-10-12","bp":false}],"notes":[]},{"id":15,"ch":"07BPPC2604-923","acct":"201004201856749","name":"DALE B LAGONERA","phone":"","bal":23700.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":16,"due":"2026-10-13","amt":23700.0,"paid":23700.0,"on":"2026-10-13","bp":false}],"notes":[]},{"id":17,"ch":"BPCC05X2607-898","acct":"0201004107655632","name":"CHRISTOPHER A LADUA","phone":"","bal":5000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":18,"due":"2026-10-15","amt":5000.0,"paid":5000.0,"on":"2026-10-15","bp":false}],"notes":[]},{"id":19,"ch":"BPCC05X2607-271","acct":"0201004107836075","name":"IVY C FLORES","phone":"","bal":20000.0,"des":"SPLIT-OTP OLD","arr":"Installment","remark":"","rmk":"PTP","part":false,"inst":[{"id":20,"due":"2026-10-15","amt":20000.0,"paid":20000.0,"on":"2026-10-15","bp":false},{"id":43,"due":"2026-10-22","amt":20000.0,"paid":0,"on":"","bp":false},{"id":80,"due":"2026-10-29","amt":20000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":21,"ch":"BPCC05X2607-416","acct":"201004109795238","name":"MARIA ROQUESA S PACATANG","phone":"","bal":5800.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":22,"due":"2026-10-15","amt":5800.0,"paid":5800.0,"on":"2026-10-15","bp":false}],"notes":[]},{"id":23,"ch":"07BPPC2604-53","acct":"201004107173222","name":"BIANCA MAE P BANGCAYA","phone":"","bal":28050.0,"des":"FOR EPAMS DECLARATION","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":24,"due":"2026-10-20","amt":28050.0,"paid":28050.0,"on":"2026-10-20","bp":false}],"notes":[]},{"id":25,"ch":"07BPPC2601-14","acct":"201001103733367","name":"ROSALIE S REDILLA","phone":"","bal":12900.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PARTIAL","part":true,"inst":[{"id":26,"due":"2026-10-12","amt":2152.31,"paid":2152.31,"on":"2026-10-12","bp":false}],"notes":[]},{"id":27,"ch":"BPCC05X2607-418","acct":"201004108111668","name":"GLADYS S BAUTISTA","phone":"","bal":15000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PARTIAL","part":true,"inst":[{"id":28,"due":"2026-10-12","amt":1048.0,"paid":1048.0,"on":"2026-10-12","bp":false}],"notes":[]},{"id":29,"ch":"07BPPC2604-774","acct":"201003308235087","name":"ELCIALYN F PAGUITAL","phone":"","bal":20000.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PARTIAL","part":true,"inst":[{"id":30,"due":"2026-10-02","amt":5000.0,"paid":20000.0,"on":"2026-10-02","bp":false}],"notes":[]},{"id":31,"ch":"07BPPC2604-761","acct":"201003309113127","name":"CHETO L GALLEROS","phone":"","bal":20000.0,"des":"OLD FOR EPAMS","arr":"Split payment","remark":"","rmk":"PARTIAL","part":true,"inst":[{"id":32,"due":"2026-10-11","amt":10000.0,"paid":10000.0,"on":"2026-10-11","bp":false},{"id":33,"due":"2026-10-30","amt":10000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":34,"ch":"BPCC05X2605-731","acct":"201003306279350","name":"JULIET C JUSTAN","phone":"","bal":10000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"PERRENNIAL","rmk":"PERRENNIAL","part":false,"inst":[{"id":35,"due":"2026-10-12","amt":2000.0,"paid":2000.0,"on":"2026-10-12","bp":false}],"notes":[]},{"id":36,"ch":"BPCC05X2607-050","acct":"201002202850121","name":"ARSELOU LEQUIT SALAZAR","phone":"","bal":10000.0,"des":"OLD FOR EPAMS","arr":"Split payment","remark":"PERRENNIAL","rmk":"PERRENNIAL","part":false,"inst":[{"id":37,"due":"2026-10-05","amt":5000.0,"paid":5000.0,"on":"2026-10-05","bp":false},{"id":38,"due":"2026-10-14","amt":1353.0,"paid":1353.0,"on":"2026-10-14","bp":false}],"notes":[]},{"id":39,"ch":"BPCC05X2607-891","acct":"0201004105413000","name":"JUNE L LOPEZ","phone":"","bal":3000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":40,"due":"2026-10-16","amt":3000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":41,"ch":"BPPL0202605-030","acct":"17254642","name":"MERCITA REBUYON GUIRIGAY","phone":"","bal":6200.0,"des":"FOR EPAMS DECLARATION","arr":"One-time payment","remark":"","rmk":"PAID","part":false,"inst":[{"id":42,"due":"2026-10-16","amt":6200.0,"paid":6200.0,"on":"2026-10-16","bp":false}],"notes":[]},{"id":44,"ch":"BPCC05X2608-094","acct":"0201004108798159","name":"RUSSELL FRANKLIN G REQUINTO","phone":"","bal":10000.0,"des":"FOR EPAMS DECLARATION","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":45,"due":"2026-10-23","amt":10000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":46,"ch":"BPCC05X2607-551","acct":"0201001104864856","name":"SHEILA MAE B SINOY","phone":"","bal":9000.0,"des":"SPLIT-OTP OLD","arr":"One-time payment","remark":"PERRENNIAL","rmk":"PERRENNIAL","part":false,"inst":[{"id":47,"due":"2026-10-23","amt":9000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":49,"ch":"BPCC05X2605-260","acct":"201004108564411","name":"RHOWENA B FERNANDO","phone":"","bal":2000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":50,"due":"2026-10-23","amt":2000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":51,"ch":"BPCC05X2607-262","acct":"201004107248677","name":"ZENAIDA D PERALTA","phone":"","bal":20850.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":52,"due":"2026-10-23","amt":20850.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":53,"ch":"BPCC05X2606-675","acct":"201001104979415","name":"ALISUCRI S NAGA","phone":"","bal":14800.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":54,"due":"2026-10-23","amt":14800.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":55,"ch":"07BPPC2601-41","acct":"201004108964488","name":"RALLY B ORILLO","phone":"","bal":7800.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"BP","part":false,"inst":[{"id":56,"due":"2026-10-25","amt":7800.0,"paid":0,"on":"","bp":true}],"notes":[]},{"id":57,"ch":"BPCC05X2606-306","acct":"201004105521786","name":"JALLANIE S HOSAIN","phone":"","bal":24900.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":58,"due":"2026-10-25","amt":24900.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":59,"ch":"07BPPC2602-235","acct":"201003306882310","name":"JULIE ANN C LUA","phone":"","bal":7400.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":60,"due":"2026-10-26","amt":7400.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":61,"ch":"07BPPC2505-744","acct":"201001105517768","name":"JOY ELMER CUBILLAS NEGRIDO","phone":"","bal":19100.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":62,"due":"2026-10-27","amt":19100.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":63,"ch":"BPCC05X2606-238","acct":"201003305859004","name":"GLORIA V GRIMALDO","phone":"","bal":30900.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":64,"due":"2026-10-27","amt":30900.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":65,"ch":"07BPPC2602-202","acct":"201003309834821","name":"SHEILA S JAAFAR","phone":"","bal":17200.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":66,"due":"2026-10-28","amt":17200.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":67,"ch":"BPCC05X2607-408","acct":"201004109698002","name":"LEONIZA B BASIO","phone":"","bal":30000.0,"des":"OLD FOR EPAMS","arr":"Split payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":68,"due":"2026-10-21","amt":10000.0,"paid":0,"on":"","bp":false},{"id":69,"due":"2026-10-29","amt":20000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":70,"ch":"07BPPC2603-159","acct":"201002205228200","name":"JEANLOU OTOC APDIAN","phone":"","bal":9250.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":71,"due":"2026-10-28","amt":9250.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":72,"ch":"BPCC05X2607-221","acct":"201002203247335","name":"ROMELITA H PROVIDO","phone":"","bal":25400.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":73,"due":"2026-10-28","amt":25400.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":74,"ch":"07BPPC2505-68","acct":"201002202523447","name":"RIZA MARIE RUBIO GARFIN","phone":"","bal":38400.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":75,"due":"2026-10-28","amt":38400.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":76,"ch":"07BPPC2601-92","acct":"201004108689572","name":"SALMAN P MACKNO","phone":"","bal":12000.0,"des":"OLD EPAMASTER","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":77,"due":"2026-10-28","amt":12000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":78,"ch":"BPPL05Z2609-217","acct":"31156769","name":"RAVILENE - QUILAB","phone":"","bal":16000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":79,"due":"2026-10-28","amt":16000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":81,"ch":"BPCC05X2606-310","acct":"201004101598515","name":"MARIA CHRISTINE P GUTIB","phone":"","bal":20200.0,"des":"FOR EPAMS DECLARATION","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":82,"due":"2026-10-29","amt":20200.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":83,"ch":"BPCC05X2607-565","acct":"201004102735819","name":"ABDULNASSER M MAGUIDALA","phone":"","bal":50000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"FOR RENEGO","rmk":"FOR RENEGO","part":false,"inst":[{"id":84,"due":"2026-10-29","amt":50000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":85,"ch":"BPCC05X2607-307","acct":"201004101958875","name":"RYAN J HIBAYA","phone":"","bal":344800.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":86,"due":"2026-10-29","amt":344800.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":87,"ch":"07BPPC2602-223","acct":"201003306752273","name":"PRECY JANE JASMIN PACIO","phone":"","bal":30000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":88,"due":"2026-10-29","amt":30000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":89,"ch":"BPCC05X2607-815","acct":"201003306471486","name":"MA THERESA S COLINA","phone":"","bal":18900.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":90,"due":"2026-10-29","amt":18900.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":91,"ch":"17BPPC2604-5","acct":"201004103108511","name":"ASLIA T PACABUNTAL PANDAPATAN","phone":"","bal":0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":92,"due":"2026-10-29","amt":0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":93,"ch":"BPCC05X2606-398","acct":"201004105022827","name":"AIDA S SY","phone":"","bal":10000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":94,"due":"2026-10-29","amt":10000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":95,"ch":"BPCC05X2607-890","acct":"201004107796006","name":"MERIAM A BEGUNA","phone":"","bal":300000.0,"des":"NEW SPLIT OTP","arr":"Split payment","remark":"","rmk":"PARTIAL","part":true,"inst":[{"id":96,"due":"2026-10-30","amt":300000.0,"paid":0,"on":"","bp":false},{"id":97,"due":"2026-10-30","amt":31200.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":98,"ch":"BPCC05X2608-002","acct":"0201005009797879","name":"DOMINGO MAGNO ABRACIA","phone":"","bal":30000.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":99,"due":"2026-10-30","amt":30000.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":100,"ch":"BPCC05X2605-751","acct":"201004205188743","name":"KIMBERLY G CARPIO","phone":"","bal":20850.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":101,"due":"2026-10-30","amt":20850.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":106,"ch":"BPCC01D2607-285","acct":"0201004107338122","name":"JANETH S TUPAS","phone":"","bal":152100.0,"des":"OLD FOR EPAMS","arr":"One-time payment","remark":"","rmk":"","part":false,"inst":[{"id":107,"due":"2026-10-30","amt":152100.0,"paid":0,"on":"","bp":false}],"notes":[]},{"id":115,"ch":"BPCC05X2610-049","acct":"201002203245107","name":"RHENFORD LLANGURIN GAJE","phone":"","bal":25000.0,"des":"NEW SPLIT OTP","arr":"Split payment","remark":"","rmk":"PTP","part":false,"inst":[{"id":116,"due":"2026-10-15","amt":25000.0,"paid":25000.0,"on":"2026-10-15","bp":false},{"id":117,"due":"2026-10-30","amt":25000.0,"paid":0,"on":"","bp":false}],"notes":[]}];
+const WSEED=()=>[{"id":102,"name":"ANTONIA PARAGELE PANERIO","acct":"201002206408546","phone":"","log":[]},{"id":103,"name":"MICHAEL E ROMA","acct":"0201002205068226","phone":"","log":[]},{"id":104,"name":"PATRICK VAL B FERNANDO","acct":"","phone":"","log":[]},{"id":105,"name":"JANICE IRENE D TUPAS","acct":"0201004104886933","phone":"","log":[]},{"id":108,"name":"RENDELL P COQUILLA","acct":"0201004106111553","phone":"","log":[]},{"id":109,"name":"MIKEEROSE H SALAC","acct":"0201004206784037","phone":"","log":[]},{"id":110,"name":"MARICEL YBANEZ LIVA","acct":"00000027711022","phone":"","log":[]},{"id":111,"name":"ERLFRED C BALANDRA","acct":"0201004107702186","phone":"","log":[]},{"id":112,"name":"CRIS JHON C BALMERA","acct":"0201004208826695","phone":"","log":[]},{"id":113,"name":"JONATHAN I DONGIAPON","acct":"0201003308271553","phone":"","log":[]},{"id":114,"name":"VERNIE P RODRIGO","acct":"","phone":"","log":[]}];
+$('#mp').onclick=()=>shiftM(-1);$('#mx').onclick=()=>shiftM(1);$('#mt').onclick=()=>goM(TODAY.slice(0,7));
+initM();load();render();ping();
+</script>
+<script>
+(()=>{
+const P=[
+{c:['#ffb347','#f07b16','#c4480d'],e:'#1b100b',s:'#fff'},
+{c:['#9be4ff','#2f8cf0','#123a9c'],e:'#081b4d',s:'#d9f4ff'},
+{c:['#fff3a0','#f7cf2a','#e0a010'],e:'#241b12',s:'#fff3a0',t:1},
+{c:['#ffd3f0','#d58be6','#8a4fc0'],e:'#4a2477',s:'#fff'},
+{c:['#d4ffb0','#52cf86','#16845f'],e:'#0b4636',s:'#eaffd8'},
+{c:['#ff9a8a','#e03a48','#8e1427'],e:'#2a0a10',s:'#fff'},
+{c:['#c9fff5','#3fd2c8','#12807f'],e:'#06403f',s:'#e8fffb'},
+{c:['#ffe3f0','#ff6fae','#b3225f'],e:'#4a0a2a',s:'#fff'}];
+const F='M2,-3C8,-26 34,-38 46,-30C52,-22 44,-8 26,0C16,3 8,2 2,-3Z',H='M2,1C16,0 34,6 38,19C40,30 26,35 18,28C10,22 5,12 2,5Z',T='M22,29C24,40 21,46 25,51C30,45 30,37 28,29Z',
+V='M3,-2L40,-28M3,-2L44,-14M3,-1L30,-4M4,2L36,20M4,2L22,28M4,1L34,8',
+SF=[[40,-26,2],[44,-20,1.6],[35,-31,1.5],[29,-29,1.3]],SH=[[31,24,2],[36,16,1.7],[24,30,1.7],[37,22,1.3]];
+function svg(p,i){const dots=a=>a.map(d=>`<circle cx="${d[0]}" cy="${d[1]}" r="${d[2]}" fill="${p.s}" opacity=".9"/>`).join('');
+return `<svg viewBox="0 0 100 80"><defs><radialGradient id="g${i}" cx="0" cy="0" r="46" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${p.c[0]}"/><stop offset=".55" stop-color="${p.c[1]}"/><stop offset="1" stop-color="${p.c[2]}"/></radialGradient>
+<g id="w${i}" transform="translate(50 40)">${p.t?`<path d="${T}" fill="url(#g${i})" stroke="${p.e}" stroke-width="2.4" stroke-linejoin="round"/>`:''}<path d="${H}" fill="url(#g${i})" stroke="${p.e}" stroke-width="2.4" stroke-linejoin="round"/><path d="${F}" fill="url(#g${i})" stroke="${p.e}" stroke-width="2.4" stroke-linejoin="round"/><path d="${V}" stroke="${p.e}" stroke-width=".8" opacity=".5" fill="none"/>${dots(SF)}${dots(SH)}<ellipse cx="26" cy="-17" rx="12" ry="5" transform="rotate(-32 26 -17)" fill="#fff" opacity=".16"/></g></defs>
+<g class="w"><use href="#w${i}"/></g><g class="w"><use href="#w${i}" transform="translate(100 0) scale(-1 1)"/></g>
+<ellipse cx="50" cy="42" rx="1.9" ry="9.5" fill="#2a1d17"/><circle cx="50" cy="31" r="2.3" fill="#2a1d17"/><path d="M50,30C48,23 45,19 42,18M50,30C52,23 55,19 58,18" stroke="#2a1d17" stroke-width=".9" fill="none"/></svg>`}
+const layer=document.createElement('div');layer.className='bfl';layer.setAttribute('aria-hidden','true');document.body.appendChild(layer);
+const RM=matchMedia('(prefers-reduced-motion:reduce)').matches,SEL='.card,.stat,.goal,header,.verse,.mbar,.remind,.tabs',R=Math.random,M={};
+const QU=['Even the darkest night is lit by the moon.','Like the moon, keep glowing through every phase.','The moon does not fight the dark, it shines.','Every phase is part of the whole moon.','Small steps every day lead to big results.','Every call is a chance to help someone.','Discipline is choosing what you want most over what you want now.','You are one payment away from a better month.','Be patient. Good things take time.','Believe you can and you\u2019re halfway there.','Success is small efforts repeated day after day.','Your attitude decides your altitude.','Rest if you must, but never quit.','Kindness opens doors that pressure cannot.','A calm voice solves more than a loud one.','Progress, not perfection.','Today\u2019s effort is tomorrow\u2019s commission.','Pray, plan, then work hard.','Keep showing up. It adds up.','I can do all things through Christ. \u2014 Phil 4:13','Let us not be weary in well doing. \u2014 Gal 6:9','Be strong and of a good courage. \u2014 Josh 1:9','The LORD is my shepherd; I shall not want. \u2014 Ps 23:1','Trust in the LORD with all thine heart. \u2014 Prov 3:5'];let qi=Math.floor(Math.random()*QU.length);const nq=()=>QU[qi++%QU.length];
+const B=P.map((p,i)=>{const el=document.createElement('div');el.className='bf';el.innerHTML=svg(p,i);layer.appendChild(el);const q=document.createElement('div');q.className='bq';q.textContent=nq();layer.appendChild(q);return{el,q,side:i%2,x:0,y:0,vx:0,vy:0,a:R()*6.28,r:0,ph:R()*6,s:'fly',t:2+R()*5}});
+function layout(){const r=document.querySelector('.wrap').getBoundingClientRect();M.L=r.left+14;M.R=r.right-14;const g=Math.min(M.L,innerWidth-M.R);M.side=g>=56;M.sz=M.side?Math.min(72,g*.85):38;B.forEach(b=>{b.el.style.width=M.sz+'px'})}
+function bnd(b){const z=M.sz,y=[z*.5,innerHeight-z*.5];if(!M.side)return[z/2,innerWidth-z/2,...y];
+ return b.side?[M.R+z*.25,Math.max(M.R+z*.25+4,innerWidth-z*.45),...y]:[z*.45,Math.max(z*.45+4,M.L-z*.25),...y]}
+function track(b){const e=b.g;if(!e||!e.isConnected)return false;const r=e.getBoundingClientRect();b.ty=r.top+b.oy;
+ b.tx=M.side?(b.side?r.right+M.sz*.3:r.left-M.sz*.3):r.right-b.ox;
+ return r.height>0&&b.ty>M.sz*.5&&b.ty<innerHeight-M.sz*.5&&b.tx>0&&b.tx<innerWidth}
+function pick(b){const L=[...document.querySelectorAll(SEL)].filter(e=>{if(!e.offsetParent)return false;const r=e.getBoundingClientRect();return r.height>24&&r.bottom>90&&r.top<innerHeight-90});
+ if(!L.length)return false;b.g=L[Math.floor(R()*L.length)];const r=b.g.getBoundingClientRect();b.oy=M.side?Math.max(10,Math.min(r.height-10,20+R()*Math.min(120,r.height))):2;b.ox=20+R()*Math.min(60,r.width/2);
+ if(!track(b))return false;b.s='go';return true}
+function step(b,dt,t){const[x0,x1,y0,y1]=bnd(b);
+ if(b.s==='perch'){if(!track(b)||(b.t-=dt)<=0){b.s='fly';b.el.classList.remove('p');b.q.textContent=nq();b.a=-1.6+(R()-.5)*1.4;b.vx=(R()-.5)*60;b.vy=-70;b.t=6+R()*8}else{b.x=b.tx;b.y=b.ty}}
+ else{let dx,dy;
+  if(b.s==='go'){if(!track(b))b.s='fly';else{const ex=b.tx-b.x,ey=b.ty-b.y,d=Math.hypot(ex,ey);
+   if(d<5){b.s='perch';b.t=4+R()*6;b.el.classList.add('p')}else{const sp=Math.min(120,30+d*1.3);dx=ex/d*sp+Math.sin(t*3+b.ph)*22;dy=ey/d*sp+Math.cos(t*2.3+b.ph)*18}}}
+  if(b.s==='fly'){b.a+=(R()-.5)*4*dt;b.t-=dt;const sp=48+Math.sin(t*.7+b.ph)*14;dx=Math.cos(b.a)*sp;dy=Math.sin(b.a)*sp*.8;if(b.t<=0)pick(b)||(b.t=3)}
+  if(b.s!=='perch'){b.vx+=(dx-b.vx)*Math.min(1,3*dt);b.vy+=(dy-b.vy)*Math.min(1,3*dt);b.x+=b.vx*dt;b.y+=b.vy*dt;
+   if(b.s==='fly'){if(b.x<x0){b.x=x0;b.a=Math.atan2(Math.sin(b.a),Math.abs(Math.cos(b.a)))}if(b.x>x1){b.x=x1;b.a=Math.atan2(Math.sin(b.a),-Math.abs(Math.cos(b.a)))}
+    if(b.y<y0){b.y=y0;b.a=Math.atan2(Math.abs(Math.sin(b.a)),Math.cos(b.a))}if(b.y>y1){b.y=y1;b.a=Math.atan2(-Math.abs(Math.sin(b.a)),Math.cos(b.a))}}}}
+ const tr=b.s==='perch'?(M.side?(b.side?-16:16):0):Math.max(-35,Math.min(35,b.vx*.5));b.r+=(tr-b.r)*Math.min(1,5*dt);
+ const bob=b.s==='perch'?0:Math.sin(t*9+b.ph)*3;b.el.style.transform=`translate(${b.x-M.sz/2}px,${b.y-M.sz*.4+bob}px) rotate(${b.r}deg)`;const W=M.side?Math.max(70,Math.min(150,(b.side?innerWidth-M.R:M.L)-8)):150,q=b.q;q.style.width=W+'px';let qx=b.x-W/2;qx=M.side?(b.side?Math.max(M.R+2,Math.min(qx,innerWidth-W-3)):Math.max(3,Math.min(qx,M.L-W-2))):Math.max(4,Math.min(qx,innerWidth-W-4));q.style.transform=`translate(${qx}px,${Math.min(innerHeight-q.offsetHeight-4,b.y+M.sz*.42+bob)}px)`;q.style.opacity=M.side||b.s==='perch'?1:0}
+layout();
+B.forEach(b=>{const[x0,x1,y0,y1]=bnd(b);b.x=x0+R()*(x1-x0);b.y=y0+R()*(y1-y0);if(RM){if(pick(b)){b.s='perch';b.el.classList.add('p');step(b,0,0)}}});
+addEventListener('resize',()=>{layout();B.forEach(b=>{const[x0,x1,y0,y1]=bnd(b);b.x=Math.min(x1,Math.max(x0,b.x));b.y=Math.min(y1,Math.max(y0,b.y))})});
+if(!RM){let last=performance.now();(function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;B.forEach(b=>step(b,dt,now/1000));requestAnimationFrame(loop)})(last)}
+})();
+</script>
+<script>
+(()=>{const f=document.querySelector('.fx'),R=Math.random;let h='';
+for(let i=0;i<9;i++)h+=`<i class="ln" style="--x:${R()*96}%;--s:${14+R()*12}px;--d:${20+R()*16}s;--dx:${(R()-.5)*120}px;animation-delay:-${R()*30}s"></i>`;
+for(let i=0;i<16;i++)h+=`<b class="fy" style="--x:${R()*98}%;--y:${30+R()*55}%;--d:${3+R()*4}s;--dx:${(R()-.5)*60}px;--dy:${(R()-.5)*60}px"></b>`;
+f.insertAdjacentHTML('beforeend',h)})();
+</script>
+<script>
+(()=>{
+const $=s=>document.querySelector(s),H=k=>String(k).toLowerCase().replace(/[^a-z0-9]/g,''),num=v=>+String(v).replace(/[^0-9.\-]/g,'')||0;
+const COL={name:['name','customername'],ch:['chcode','ch'],acct:['customerno','customernumber','accountno','acct'],des:['designation'],arr:['arrangement','paymentarrangement'],bal:['fullptp','fullptpamount','balance'],acst:['accountstatus'],due:['duedate','due','paymentdate'],amt:['amount','paymentamount'],rec:['received','amountreceived'],on:['receivedon','datereceived'],st:['status'],rmk:['paymentremarks','remarks'],phone:['phone'],date:['date'],act:['action'],note:['note'],t:['title'],u:['link','url'],k:['type']};
+const toISO=v=>{if(v==null||v==='')return'';if(v instanceof Date)return isNaN(v)?'':iso(new Date(v.getTime()+432e5));if(typeof v==='number')return new Date(Math.round((v-25569)*864e5)).toISOString().slice(0,10);const t=String(v).trim();if(/^\d{4}-\d{2}-\d{2}/.test(t))return t.slice(0,10);const d=new Date(t);return isNaN(d)?'':iso(d)};
+function rows(ws){const a=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}),hi=a.findIndex(r=>r.some(c=>['name','title'].includes(H(c))));if(hi<0)return[];const hd=a[hi].map(H);
+ return a.slice(hi+1).map(r=>{const o={};for(const k in COL){const j=hd.findIndex(h=>COL[k].includes(h));o[k]=j<0?'':r[j]}return o}).filter(o=>Object.values(o).some(v=>v!==''))}
+async function imp(f){
+ if(!window.XLSX){toast('Excel tool did not load — please try again');return}
+ try{const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true}),DES=[...$('#a_des').options].map(o=>o.value),ARR=[...$('#a_arr').options].map(o=>o.value);
+  let nA=0,nP=0,nW=0,nL=0,first='',k=0;const id=()=>Date.now()*100+(++k);
+  for(const sn of wb.SheetNames){const R=rows(wb.Sheets[sn]),hn=H(sn);if(!R.length)continue;
+   if(hn==='links'||R.some(r=>r.u)){R.forEach(r=>{const u=String(r.u).trim();if(!u||links.some(l=>l.u===u))return;links.push({id:id(),t:String(r.t||u),u,k:['Daily','Important','Reference','Done'].includes(r.k)?r.k:'Reference',n:String(r.note||'')});nL++})}
+   else if(R.some(r=>toISO(r.due))){R.forEach(r=>{const name=String(r.name).trim(),acct=String(r.acct).trim(),due=toISO(r.due);if(!name||!due)return;
+     let a=data.find(x=>acct?String(x.acct)===acct:x.name.toLowerCase()===name.toLowerCase());
+     if(!a){a={id:id(),ch:String(r.ch).trim(),acct,name,phone:String(r.phone||''),bal:num(r.bal),des:DES.includes(r.des)?r.des:'OLD FOR EPAMS',arr:ARR.includes(r.arr)?r.arr:'One-time payment',remark:'',rmk:String(r.rmk||''),part:/partial/i.test(r.acst),inst:[],notes:[]};data.push(a);nA++}
+     const amt=num(r.amt);if(a.inst.some(i=>i.due===due&&i.amt===amt))return;const rec=num(r.rec);
+     a.inst.push({id:id(),due,amt,paid:rec,on:rec>0?(toISO(r.on)||due):'',bp:/^bp$/i.test(String(r.st).trim())});if(!a.bal)a.bal=num(r.bal)||amt;nP++;first=first||due})}
+   else if(hn.includes('worked')||R.some(r=>r.act)){R.forEach(r=>{const name=String(r.name).trim(),acct=String(r.acct).trim();if(!name)return;
+     let w=work.find(x=>acct?String(x.acct)===acct:x.name.toLowerCase()===name.toLowerCase());if(!w){w={id:id(),name,acct,phone:String(r.phone||''),log:[]};work.push(w);nW++}
+     if(r.act){const e={d:toISO(r.date)||TODAY,ch:String(r.act),t:String(r.note||'')};if(!w.log.some(l=>l.d===e.d&&l.ch===e.ch&&l.t===e.t))w.log.push(e)}})}}
+  if(!nA&&!nP&&!nW&&!nL){toast('Nothing new to import — check the column headings');return}
+  save();saveW();saveL();if(first)goM(first.slice(0,7));else render();
+  toast('Imported: '+nA+' account(s), '+nP+' payment(s)'+(nW?', '+nW+' worked':'')+(nL?', '+nL+' link(s)':''))
+ }catch(e){toast('Could not read that file — use an .xlsx or .csv exported from this tracker')}}
+$('#imp').onclick=()=>$('#impf').click();
+$('#impf').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)imp(f)};
+})();
+</script>
+<script>
+(()=>{const R=Math.random,g=document.getElementById('fls'),f=document.querySelector('.fx');let h='';
+const P=['#ff7eb9','#ff5a78','#fff','#c9a7ff','#ffd1e8','#8fa8ff'];
+for(let i=0;i<95;i++){const x=R()*1200;if(x>520&&x<770)continue;const y=345+R()*55,t=Math.floor(R()*4),hh=14+R()*30,sc=.8+R()*.8,by=y-hh,c=P[Math.floor(R()*P.length)];
+ let b='';if(t===0){for(let a=0;a<8;a++)b+=`<ellipse rx="2.2" ry="5" cy="-5" transform="rotate(${a*45})" fill="#fff"/>`;b+='<circle r="2.4" fill="#ffd54a"/>'}
+ else if(t===1)b=`<path d="M-5 0C-6 -9 -2 -13 0 -13C2 -13 6 -9 5 0C2 3 -2 3 -5 0Z" fill="${c}"/>`;
+ else if(t===2)b='<circle r="5" fill="#ff4b5c"/><circle r="1.6" fill="#3a1030"/>';
+ else for(let k=0;k<4;k++)b+=`<ellipse cx="${k%2?2:-2}" cy="${-k*4}" rx="2.4" ry="3" fill="#9b7dff"/>`;
+ h+=`<path d="M${x} ${y}C${x+3} ${y-hh*.4} ${x-3} ${y-hh*.7} ${x} ${by}" stroke="#2f8a58" stroke-width="1.4" fill="none"/><g transform="translate(${x} ${by}) scale(${sc})">${b}</g>`}
+g.innerHTML=h;let p='';for(let i=0;i<14;i++)p+=`<s class="pt" style="--x:${R()*98}%;--s:${8+R()*8}px;--d:${12+R()*12}s;--dl:-${R()*20}s;--dx:${(R()-.5)*160}px"></s>`;f.insertAdjacentHTML('beforeend',p)})();
+</script>
+<script>
+(()=>{const R=Math.random;let h='';for(let i=0;i<14;i++){const z=10+R()*20;h+=`<svg class="gs" viewBox="-12 -12 24 24" style="--x:${R()*96}%;--y:${R()*80}%;--s:${z}px;--d:${2+R()*3}s;--dl:-${R()*4}s"><path d="M0 -11L1.6 -1.6L11 0L1.6 1.6L0 11L-1.6 1.6L-11 0L-1.6 -1.6Z"/></svg>`}
+document.querySelector('.fx').insertAdjacentHTML('beforeend',h)})();
+</script>
+</body>
+</html>
